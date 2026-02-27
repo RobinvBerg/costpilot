@@ -741,6 +741,29 @@ body.efficiency-mode .two-col:not(#efficiency-section .two-col){display:none!imp
 .eff-loading{text-align:center;padding:48px;color:var(--text-muted);font-family:var(--mono);font-size:13px}
 body.light .eff-score-card,body.light .eff-rule-card,body.light .eff-pattern-card{background:#fff;border-color:rgba(0,0,0,0.08)}
 body.light .eff-playbook{background:#f0f0f4}
+/* ── Quality × Cost ── */
+.eff-quality-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.eff-quality-table th{text-align:left;padding:6px 10px;color:var(--text-muted);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600}
+.eff-quality-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.eff-quality-table tr:last-child td{border-bottom:none}
+.eff-quality-table tr:hover td{background:rgba(255,255,255,0.03)}
+.eff-roi-high{color:var(--green);font-weight:700;font-family:var(--mono)}
+.eff-roi-mid{color:var(--yellow);font-weight:700;font-family:var(--mono)}
+.eff-roi-low{color:var(--red);font-weight:700;font-family:var(--mono)}
+.eff-quality-empty{text-align:center;padding:24px;color:var(--text-muted);font-size:12px}
+.eff-quality-form{display:none;margin-top:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.eff-quality-form.open{display:block}
+.eff-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.eff-form-row.full{grid-template-columns:1fr}
+.eff-form-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
+.eff-form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-size:12px;box-sizing:border-box}
+.eff-form-input:focus{outline:none;border-color:var(--cyan)}
+.eff-form-submit{background:var(--cyan);color:#000;border:none;border-radius:5px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
+.eff-form-submit:hover{opacity:0.85}
+.eff-log-btn{font-size:11px;padding:4px 12px;margin-top:8px;cursor:pointer;background:rgba(0,212,255,0.1);color:var(--cyan);border:1px solid rgba(0,212,255,0.3);border-radius:5px;font-weight:600}
+.eff-log-btn:hover{background:rgba(0,212,255,0.18)}
+body.light .eff-quality-table th{color:rgba(0,0,0,0.4)}
+body.light .eff-quality-form{background:#fff}
 </style>
 </head>
 <body>
@@ -1209,6 +1232,50 @@ body.light .eff-playbook{background:#f0f0f4}
       <!-- Pattern stats -->
       <div class="eff-section-title">Usage Patterns Today</div>
       <div class="eff-pattern-grid" id="eff-pattern-grid"></div>
+      <!-- Quality × Cost -->
+      <div class="eff-section-title">Quality × Cost</div>
+      <div id="eff-quality-section">
+        <div id="eff-quality-content">
+          <div class="eff-quality-empty">Loading quality data…</div>
+        </div>
+        <button class="eff-log-btn" onclick="toggleQualityForm()">+ Log Outcome</button>
+        <div class="eff-quality-form" id="eff-quality-form">
+          <div class="eff-form-row">
+            <div>
+              <div class="eff-form-label">Task</div>
+              <select id="qf-task" class="eff-form-input">
+                <option value="">Select task…</option>
+              </select>
+            </div>
+            <div>
+              <div class="eff-form-label">Model</div>
+              <input type="text" id="qf-model" class="eff-form-input" placeholder="claude-sonnet-4-6">
+            </div>
+          </div>
+          <div class="eff-form-row">
+            <div>
+              <div class="eff-form-label">Metric</div>
+              <input type="text" id="qf-metric" class="eff-form-input" placeholder="upvotes">
+            </div>
+            <div>
+              <div class="eff-form-label">Value</div>
+              <input type="number" id="qf-value" class="eff-form-input" placeholder="2" step="0.1">
+            </div>
+          </div>
+          <div class="eff-form-row">
+            <div>
+              <div class="eff-form-label">Cost (USD)</div>
+              <input type="number" id="qf-cost" class="eff-form-input" placeholder="0.38" step="0.01">
+            </div>
+            <div>
+              <div class="eff-form-label">Notes</div>
+              <input type="text" id="qf-notes" class="eff-form-input" placeholder="2 upvotes, 1 comment">
+            </div>
+          </div>
+          <button class="eff-form-submit" onclick="submitQualityEntry()">Log Outcome</button>
+          <span id="qf-status" style="margin-left:10px;font-size:11px;color:var(--text-muted)"></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3785,6 +3852,9 @@ function renderEfficiency(d) {
       </div>
     `).join('');
   }
+
+  // Quality × Cost — fetch and render
+  fetchQuality();
 }
 
 function togglePlaybook(btn) {
@@ -3792,6 +3862,114 @@ function togglePlaybook(btn) {
   if (!pb) return;
   pb.classList.toggle('open');
   btn.textContent = pb.classList.contains('open') ? '📖 Hide Playbook' : '📖 Playbook';
+}
+
+// ── Quality × Cost ──────────────────────────────────────────────────────────
+async function fetchQuality() {
+  try {
+    const res = await fetch('/api/quality');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderQuality(data);
+  } catch (err) {
+    const el = document.getElementById('eff-quality-content');
+    if (el) el.innerHTML = `<div class="eff-quality-empty">⚠ Failed to load quality data</div>`;
+  }
+}
+
+function renderQuality(data) {
+  const el = document.getElementById('eff-quality-content');
+  if (!el) return;
+
+  const byTask = data.by_task || {};
+  const tasks  = Object.keys(byTask);
+
+  if (tasks.length === 0) {
+    el.innerHTML = `<div class="eff-quality-empty">No quality data yet. Log outcomes to track ROI.</div>`;
+    return;
+  }
+
+  const rows = tasks.sort((a, b) => byTask[b].roi - byTask[a].roi).map(task => {
+    const t   = byTask[task];
+    const roi = t.roi;
+    const roiClass = roi >= 5 ? 'eff-roi-high' : roi >= 2 ? 'eff-roi-mid' : 'eff-roi-low';
+    return `<tr>
+      <td>${task}</td>
+      <td style="font-family:var(--mono)">${t.avg_quality.toFixed(2)}</td>
+      <td style="font-family:var(--mono)">$${t.avg_cost.toFixed(4)}</td>
+      <td class="${roiClass}">${roi.toFixed(2)}</td>
+      <td style="color:var(--text-muted)">${t.entries}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<table class="eff-quality-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Avg Quality</th>
+        <th>Avg Cost</th>
+        <th>ROI Score</th>
+        <th>Entries</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function toggleQualityForm() {
+  const form = document.getElementById('eff-quality-form');
+  if (!form) return;
+  form.classList.toggle('open');
+
+  // Populate task dropdown from today's breakdown
+  if (form.classList.contains('open')) {
+    const sel = document.getElementById('qf-task');
+    if (sel && lastState?.breakdown) {
+      const existingVals = [...sel.options].map(o => o.value);
+      lastState.breakdown.forEach(b => {
+        if (!existingVals.includes(b.session) && b.session) {
+          const opt = document.createElement('option');
+          opt.value = b.session;
+          opt.textContent = b.session;
+          sel.appendChild(opt);
+        }
+      });
+    }
+  }
+}
+
+async function submitQualityEntry() {
+  const task    = document.getElementById('qf-task')?.value?.trim();
+  const model   = document.getElementById('qf-model')?.value?.trim() || 'unknown';
+  const metric  = document.getElementById('qf-metric')?.value?.trim() || 'upvotes';
+  const value   = parseFloat(document.getElementById('qf-value')?.value || '0');
+  const cost    = parseFloat(document.getElementById('qf-cost')?.value || '0');
+  const notes   = document.getElementById('qf-notes')?.value?.trim() || '';
+  const statusEl = document.getElementById('qf-status');
+
+  if (!task) { if (statusEl) statusEl.textContent = '⚠ Task required'; return; }
+  if (isNaN(value)) { if (statusEl) statusEl.textContent = '⚠ Invalid value'; return; }
+  if (isNaN(cost) || cost <= 0) { if (statusEl) statusEl.textContent = '⚠ Invalid cost'; return; }
+
+  try {
+    const res = await fetch('/api/quality', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, model, metric, value, cost_usd: cost, notes }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (statusEl) statusEl.textContent = '✅ Logged!';
+    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+    // Refresh quality data
+    await fetchQuality();
+    // Clear form
+    ['qf-task','qf-model','qf-metric','qf-value','qf-cost','qf-notes'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  } catch (err) {
+    if (statusEl) statusEl.textContent = `⚠ Error: ${err.message}`;
+  }
 }
 
 // ── Filter tabs ────────────────────────────────────────────────

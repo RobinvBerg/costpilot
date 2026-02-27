@@ -80,6 +80,7 @@ ARCHIVE_FILE   = os.path.join(BASE_DIR, "cost-events-archive.jsonl")
 ANNOTATIONS_FILE   = os.path.join(BASE_DIR, "annotations.json")
 LAST_RUN_FILE      = os.path.join(BASE_DIR, "auto-logger-last-run.json")
 GROUND_TRUTH_FILE  = os.path.join(BASE_DIR, "anthropic_ground_truth.json")
+QUALITY_LOG_FILE   = os.path.join(BASE_DIR, "quality-log.jsonl")
 PORT               = 8742
 HOST           = "0.0.0.0"
 JSON_LOG       = False  # set via --json-log
@@ -1353,23 +1354,26 @@ def compute_efficiency():
             ),
         })
 
-    # Rule 2 — long_session
-    if session_hours > 4 and kira_events:
+    # Rule 2 — long_session (only trigger if cache hit rate is low)
+    # Long sessions with high cache are actually efficient (cache reads 10× cheaper)
+    if cache_ratio < 0.80 and session_hours > 4 and kira_events:
         est_savings = round(kira_cost * 0.20, 2)
         rules.append({
             "id": "long_session",
             "title": "Long session — context bloat risk",
             "severity": "medium",
             "finding": (
-                f"KIRA session active {session_hours:.1f}h today — "
-                f"context accumulates and inflates token costs"
+                f"KIRA session active {session_hours:.1f}h today with cache hit rate "
+                f"{cache_ratio*100:.0f}% (< 80%) — context accumulates and inflates token costs"
             ),
             "recommendation": "Start a fresh session for unrelated tasks to reset context cost",
             "est_savings_usd": est_savings,
             "playbook": (
                 f"After {session_hours:.0f}h of continuous chat, your context window carries "
                 f"{len(kira_events)} API calls of history. Each new message re-sends all that "
-                "context. Starting a new session for a new topic resets token cost to near zero."
+                "context. Starting a new session for a new topic resets token cost to near zero. "
+                "Note: long sessions with cache hit rate ≥80% are considered efficient — "
+                "cached reads cost 10× less than fresh input tokens."
             ),
         })
 
@@ -1454,6 +1458,38 @@ def compute_efficiency():
                 "and keeps your main session responsive during productive work hours."
             ),
         })
+
+    # Rule 7 — tri_model_routing (always show as recommendation)
+    # Estimate savings if 40% of sub-agent work moved to Haiku (12× cheaper than Sonnet)
+    _haiku_pct    = 0.40
+    _sonnet_price = 3.0   # $/M input tokens (approx)
+    _haiku_price  = _sonnet_price / 12.0  # Haiku ~12× cheaper than Sonnet
+    _tri_savings  = round(_haiku_pct * sub_cost * (_sonnet_price - _haiku_price) / _sonnet_price, 3)
+    _sub_session_count = len({e.get("session", "") for e in subagent_events if e.get("session", "")})
+    rules.append({
+        "id": "tri_model_routing",
+        "title": "Use tri-model routing (Haiku → Sonnet → Opus)",
+        "severity": "medium",
+        "finding": (
+            f"{_sub_session_count} sub-agent session{'s' if _sub_session_count != 1 else ''} "
+            f"ran on Sonnet today, all billed at Sonnet rates "
+            f"(${sub_cost:.3f} total sub-agent spend)"
+        ),
+        "recommendation": (
+            "Route simple tasks (feed scans, formatting, checks) to Haiku. "
+            "Complex reasoning to Opus."
+        ),
+        "est_savings_usd": _tri_savings,
+        "playbook": (
+            "Split sub-agent workload by complexity:\n"
+            "  Haiku:  feed scans, data formatting, simple checks (~$0.08/M)\n"
+            "  Sonnet: coding, analysis, content creation (~$3/M)\n"
+            "  Opus:   architecture, strategy, hard problems (~$15/M)\n\n"
+            "Estimate: 40% of tasks → Haiku, 50% → Sonnet, 10% → Opus. "
+            f"Routing {_haiku_pct*100:.0f}% of tasks to Haiku saves ~{(_sonnet_price - _haiku_price)/_sonnet_price*100:.0f}% "
+            "on those tasks (Haiku is 12× cheaper than Sonnet, 37× cheaper than Opus)."
+        ),
+    })
 
     # ── Score ────────────────────────────────────────────────────────────────
     deductions = {"high": 20, "medium": 10, "low": 5}
@@ -1937,6 +1973,9 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/efficiency":
             self._json(compute_efficiency())
 
+        elif path == "/api/quality":
+            self._handle_quality_get()
+
         elif path.startswith("/api/"):
             self._json({"error": "Not found"}, status=404)
 
@@ -2060,6 +2099,9 @@ class Handler(BaseHTTPRequestHandler):
             }
             save_annotations(annos)
             self._json({"ok": True, "id": anno_id})
+
+        elif path == "/api/quality":
+            self._handle_quality_post(body)
 
         else:
             self._json({"error": "Not found"}, status=404)
@@ -2269,6 +2311,75 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
         self._json({"last_run": last_run, "age_sec": age_sec})
+
+    def _handle_quality_get(self):
+        """GET /api/quality — read quality-log.jsonl and return entries + per-task aggregates."""
+        entries = []
+        if os.path.exists(QUALITY_LOG_FILE):
+            try:
+                with open(QUALITY_LOG_FILE) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                entries.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                pass
+            except Exception as e:
+                log_json("warning", f"Quality log read error: {e}")
+
+        # Aggregate by task
+        from collections import defaultdict as _dd
+        task_groups = _dd(list)
+        for entry in entries:
+            task_groups[entry.get("task", "Unknown")].append(entry)
+
+        by_task = {}
+        for task, evts in task_groups.items():
+            quality_vals = [e.get("value", 0) for e in evts]
+            cost_vals    = [e.get("cost_usd", 0) for e in evts]
+            avg_quality  = round(sum(quality_vals) / len(quality_vals), 2) if quality_vals else 0
+            avg_cost     = round(sum(cost_vals)    / len(cost_vals),    4) if cost_vals    else 0
+            roi          = round(avg_quality / avg_cost, 2) if avg_cost > 0 else 0
+            by_task[task] = {
+                "avg_quality": avg_quality,
+                "avg_cost":    avg_cost,
+                "roi":         roi,
+                "entries":     len(evts),
+            }
+
+        self._json({"entries": entries, "by_task": by_task})
+
+    def _handle_quality_post(self, body):
+        """POST /api/quality — append one entry to quality-log.jsonl."""
+        try:
+            data = json.loads(body)
+        except Exception:
+            self._json({"error": "Invalid JSON"}, status=400)
+            return
+
+        required = {"task", "model", "metric", "value", "cost_usd"}
+        missing  = required - set(data.keys())
+        if missing:
+            self._json({"error": f"Missing fields: {', '.join(sorted(missing))}"}, status=400)
+            return
+
+        entry = {
+            "ts":       int(time.time()),
+            "task":     str(data["task"]),
+            "model":    str(data.get("model", "")),
+            "metric":   str(data.get("metric", "upvotes")),
+            "value":    float(data["value"]),
+            "cost_usd": float(data["cost_usd"]),
+            "notes":    str(data.get("notes", "")),
+        }
+
+        try:
+            with open(QUALITY_LOG_FILE, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+            self._json({"ok": True, "entry": entry})
+        except Exception as e:
+            self._json({"error": str(e)}, status=500)
 
     def _export_csv(self, qs):
         events, _ = load_events()
