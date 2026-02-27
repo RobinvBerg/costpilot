@@ -249,12 +249,32 @@ _malformed_count  = 0
 
 _SESSION_LABEL_CACHE = {}  # session_id → enriched label
 
+def _load_spawn_labels():
+    """Read sessions.json and return {session_uuid: spawn_label} for sub-agents."""
+    import json as _json
+    sfile = os.path.join(os.path.expanduser("~"), ".openclaw", "agents", "main", "sessions", "sessions.json")
+    result = {}
+    try:
+        with open(sfile) as f:
+            data = _json.load(f)
+        for key, val in data.items():
+            if isinstance(val, dict):
+                sid = val.get("sessionId")
+                lbl = val.get("label")
+                if sid and lbl:
+                    result[sid] = lbl
+    except Exception:
+        pass
+    return result
+
+
 def _enrich_session_labels(events):
     """
-    Post-process events whose task is "Session XXXXXXXX" (anonymous UUID prefix).
-    Replace with a meaningful label like "Sonnet · Feb 27 04:00" derived from
-    the model and timestamp of the first event in that session group.
-    Mutates events in-place; uses a module-level cache to avoid re-computing.
+    Post-process events to replace anonymous labels with meaningful ones.
+    Priority:
+      1. sessions.json spawn label (e.g. "costpilot-rename-fix")
+      2. Model + timestamp ("Sonnet · Feb 27 04:00") for "Session XXXXXXXX" patterns
+    Mutates events in-place.
     """
     import re as _re
     _SESSION_RE = _re.compile(r'^Session [0-9a-f]{8}$')
@@ -262,8 +282,17 @@ def _enrich_session_labels(events):
     _MONTHS = ["Jan","Feb","Mar","Apr","May","Jun",
                "Jul","Aug","Sep","Oct","Nov","Dec"]
 
-    # Group events by their current anonymous task label
-    anon_groups = {}   # label → list of event indices
+    # Build uuid → spawn label map from sessions.json
+    spawn_labels = _load_spawn_labels()
+
+    # Pass 1: apply spawn labels (by session UUID field)
+    for ev in events:
+        uuid = ev.get("session", "")
+        if uuid and uuid in spawn_labels:
+            ev["task"] = spawn_labels[uuid]
+
+    # Pass 2: enrich remaining "Session XXXXXXXX" with model+timestamp
+    anon_groups = {}
     for i, ev in enumerate(events):
         task = ev.get("task", "")
         if _SESSION_RE.match(task):
@@ -273,7 +302,6 @@ def _enrich_session_labels(events):
         if label in _SESSION_LABEL_CACHE:
             new_label = _SESSION_LABEL_CACHE[label]
         else:
-            # Use the first (oldest) event in this group to derive label
             first_ev = min((events[i] for i in indices), key=lambda e: e.get("ts", 0))
             model_raw  = (first_ev.get("model") or "").lower()
             model_short = next((v for k, v in _MODEL_SHORT.items() if k in model_raw), "AI")
@@ -282,7 +310,7 @@ def _enrich_session_labels(events):
                 dt = datetime.fromtimestamp(ts)
                 new_label = f"{model_short} · {_MONTHS[dt.month-1]} {dt.day} {dt.hour:02d}:00"
             else:
-                new_label = label  # keep as-is if no timestamp
+                new_label = label
             _SESSION_LABEL_CACHE[label] = new_label
 
         if new_label != label:

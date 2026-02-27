@@ -201,6 +201,10 @@ def build_uuid_map(sessions_dir=None):
                 if sid:
                     mapping[key] = sid
                     rev_mapping[sid] = key
+                    # Also store human label if present (e.g. sessions_spawn label)
+                    lbl = val.get("label")
+                    if lbl:
+                        rev_mapping[f"label:{sid}"] = lbl
     except Exception as e:
         log_error(f"sessions.json read error: {e}")
     return mapping, rev_mapping
@@ -537,11 +541,16 @@ def _run(args, run_start):
         # Get label via uuid → session_key → label
         sk  = uuid_to_key.get(uuid, uuid)
         lbl = session_label(sk, cron_names, overrides)
-        # If still an anonymous "Session XXXX", try to enrich from JSONL content
+        # Check if sessions.json has a human-readable label (e.g. from sessions_spawn)
         if lbl.startswith("Session "):
-            smart = smart_label_from_jsonl(fpath)
-            if smart:
-                lbl = smart
+            spawn_label = uuid_to_key.get(f"label:{uuid}")
+            if spawn_label:
+                lbl = spawn_label
+            else:
+                # Fallback: derive from JSONL content (model + timestamp)
+                smart = smart_label_from_jsonl(fpath)
+                if smart:
+                    lbl = smart
 
         last_ts = state.get(uuid)  # float or None
         events, new_max_ts = process_jsonl(fpath, last_ts, lbl, dry_run=args.dry_run)
