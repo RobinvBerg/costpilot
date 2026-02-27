@@ -769,7 +769,7 @@ def _build_state_inner():
         tags    = parse_tags(task)
         is_recurring = task in recurring_tasks
         avg_cost_for_task = task_avg.get(task, 0)
-        is_anomaly = avg_cost_for_task > 0 and cost > 5 * avg_cost_for_task and cost > 0.5
+        is_anomaly = avg_cost_for_task > 0 and cost > 5 * avg_cost_for_task and cost > 2.0
         model_display = aliases.get(model, model)
 
         recent_tasks.append({
@@ -1036,7 +1036,7 @@ def _build_state_inner():
     for e in today_events:
         task = (e.get("task") or "").strip()
         avg_c = task_avg.get(task, 0)
-        if avg_c > 0 and e.get("cost_usd", 0) > 5 * avg_c and e.get("cost_usd", 0) > 0.5:
+        if avg_c > 0 and e.get("cost_usd", 0) > 5 * avg_c and e.get("cost_usd", 0) > 2.0:
             computed_anomalies.append(e)
     all_anomalies = {e.get("id", ""): e for e in anomalies_today + computed_anomalies}
     anomaly_list = [
