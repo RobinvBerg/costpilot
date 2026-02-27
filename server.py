@@ -652,7 +652,7 @@ def _build_state_inner():
         tags    = parse_tags(task)
         is_recurring = task in recurring_tasks
         avg_cost_for_task = task_avg.get(task, 0)
-        is_anomaly = avg_cost_for_task > 0 and cost > 3 * avg_cost_for_task
+        is_anomaly = avg_cost_for_task > 0 and cost > 5 * avg_cost_for_task and cost > 0.5
         model_display = aliases.get(model, model)
 
         recent_tasks.append({
@@ -888,7 +888,7 @@ def _build_state_inner():
 
     # Data volume warning
     events_today_count = len(today_events)
-    data_volume_warning = events_today_count > 100
+    data_volume_warning = events_today_count > 1000
 
     # Session count per day
     session_count_today = len({e.get("session", "") for e in today_events})
@@ -919,7 +919,7 @@ def _build_state_inner():
     for e in today_events:
         task = (e.get("task") or "").strip()
         avg_c = task_avg.get(task, 0)
-        if avg_c > 0 and e.get("cost_usd", 0) > 3 * avg_c:
+        if avg_c > 0 and e.get("cost_usd", 0) > 5 * avg_c and e.get("cost_usd", 0) > 0.5:
             computed_anomalies.append(e)
     all_anomalies = {e.get("id", ""): e for e in anomalies_today + computed_anomalies}
     anomaly_list = [
