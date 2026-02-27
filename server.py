@@ -596,7 +596,44 @@ def _build_state_inner():
     def conv(v):
         return round(v * rate, 6)
 
-    # ── Breakdown ──────────────────────────────────────────────────────────────
+    # ── Model label helper ─────────────────────────────────────────────────────
+    def _model_label(m):
+        m = m.lower()
+        if "opus" in m:        return "Claude Opus"
+        if "sonnet" in m:      return "Claude Sonnet"
+        if "haiku" in m:       return "Claude Haiku"
+        if "gpt-4o-mini" in m: return "GPT-4o mini"
+        if "gpt-4o" in m:      return "GPT-4o"
+        if "gpt-4" in m:       return "GPT-4"
+        if "gpt-3" in m:       return "GPT-3.5"
+        if "gemini" in m:      return "Gemini"
+        if "mistral" in m:     return "Mistral"
+        return m[:20]
+
+    # ── Model breakdown ────────────────────────────────────────────────────────
+    def calc_model_breakdown(event_list):
+        model_totals = defaultdict(lambda: {"cost": 0.0, "tokens_in": 0, "tokens_out": 0, "tokens_cache": 0, "runs": 0})
+        for e in event_list:
+            model = e.get("model", "unknown") or "unknown"
+            model_totals[model]["cost"]         += e.get("cost_usd", 0)
+            model_totals[model]["tokens_in"]    += e.get("input_tokens", 0)
+            model_totals[model]["tokens_out"]   += e.get("output_tokens", 0)
+            model_totals[model]["tokens_cache"] += e.get("cache_read_tokens", 0)
+            model_totals[model]["runs"]         += 1
+        total_cost = sum(v["cost"] for v in model_totals.values()) or 1
+        return sorted(
+            [{"model": m, "label": _model_label(m),
+              "cost":      round(v["cost"] * rate, 4),
+              "pct":       round(v["cost"] / total_cost * 100, 1),
+              "runs":      v["runs"],
+              "tokens_in":    v["tokens_in"],
+              "tokens_out":   v["tokens_out"],
+              "tokens_cache": v["tokens_cache"]}
+             for m, v in model_totals.items()],
+            key=lambda x: -x["cost"]
+        )
+
+    # ── Task Breakdown ──────────────────────────────────────────────────────────
     def calc_breakdown(event_list):
         session_totals = defaultdict(lambda: {"cost": 0.0, "runs": 0})
         for e in event_list:
@@ -613,6 +650,10 @@ def _build_state_inner():
     breakdown       = calc_breakdown(today_events)
     breakdown_week  = calc_breakdown(week_events)
     breakdown_month = calc_breakdown(month_events)
+
+    breakdown_by_model       = calc_model_breakdown(today_events)
+    breakdown_by_model_week  = calc_model_breakdown(week_events)
+    breakdown_by_model_month = calc_model_breakdown(month_events)
 
     # ── Weekly chart (last 7 days) ─────────────────────────────────────────────
     daily_cost    = {}
@@ -1051,6 +1092,9 @@ def _build_state_inner():
         "breakdown":        breakdown,
         "breakdown_week":   breakdown_week,
         "breakdown_month":  breakdown_month,
+        "breakdown_by_model":       breakdown_by_model,
+        "breakdown_by_model_week":  breakdown_by_model_week,
+        "breakdown_by_model_month": breakdown_by_model_month,
         "breakdown_by_hour": breakdown_by_hour,
         "weekly":           weekly_chart,
         "avg_30d":          round(avg_30d, precision),

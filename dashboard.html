@@ -360,6 +360,21 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .breakdown-bar{height:100%;border-radius:4px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0}
 .breakdown-cost{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);text-align:right}
 .breakdown-pct{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:right}
+/* ── Model Breakdown (Section A) ── */
+.model-breakdown-list{display:flex;flex-direction:column;gap:10px;margin-bottom:4px}
+.model-row{display:grid;grid-template-columns:130px 1fr 76px 46px;align-items:center;gap:10px;border-radius:var(--radius-sm);padding:4px 6px;transition:background 0.15s}
+.model-row:hover{background:var(--bg3)}
+.model-label{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.model-bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+body.light .model-bar-wrap{background:#dde0e8}
+.model-bar{height:100%;border-radius:4px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0}
+.model-cost{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);text-align:right}
+.model-pct{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:right}
+/* ── Tasks toggle ── */
+.tasks-toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px 8px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text-muted);cursor:pointer;transition:all 0.2s;font-family:var(--mono)}
+.tasks-toggle-btn:hover{color:var(--cyan);border-color:rgba(0,212,255,0.4)}
+.tasks-toggle-btn.open{color:var(--cyan);border-color:rgba(0,212,255,0.4)}
+.tasks-section-header{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin:12px 0 8px;padding-top:10px;border-top:1px solid var(--border)}
 /* ── Chart containers ── */
 .chart-wrap{position:relative;height:200px}
 /* ── Heatmap ── */
@@ -601,6 +616,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   .events-header{grid-template-columns:55px 1fr 65px 30px!important}
   .breakdown-row{grid-template-columns:100px 1fr 60px}
   .breakdown-pct{display:none}
+  .model-row{grid-template-columns:100px 1fr 60px}
+  .model-pct{display:none}
   .mobile-nav{display:block}
   .cockpit{padding-bottom:80px}
 }
@@ -895,10 +912,18 @@ body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
     <div class="card" id="breakdown-card">
       <div class="card-title">
         <div class="card-title-dot"></div>
-        Daily Breakdown <span style="font-weight:400;font-size:10px;color:var(--text-muted)">(tracked)</span>
-        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-muted)" id="breakdown-date">Today</span>
+        Daily Breakdown
+        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <button class="tasks-toggle-btn" id="tasks-toggle-btn" onclick="toggleTasksSection()" title="Toggle task breakdown">▶ Tasks</button>
+        </span>
       </div>
-      <div class="breakdown-list" id="breakdown-list"></div>
+      <!-- Model Split (Section A) -->
+      <div class="model-breakdown-list" id="model-breakdown-list"></div>
+      <!-- Task Breakdown (Section B, collapsible) -->
+      <div id="tasks-section" style="display:none">
+        <div class="tasks-section-header">Tasks</div>
+        <div class="breakdown-list" id="breakdown-list"></div>
+      </div>
       <!-- All-time stats row -->
       <div class="alltime-row" id="alltime-row" style="display:none">
         <span>All-time:</span>
@@ -2191,6 +2216,38 @@ function renderTaxameterSection(data) {
   }).join('');
 }
 
+// ── Model color mapping ────────────────────────────────────────
+function modelBarColor(label) {
+  const l = (label || '').toLowerCase();
+  if (l.includes('sonnet'))  return 'var(--cyan)';
+  if (l.includes('opus'))    return 'var(--gold)';
+  if (l.includes('haiku'))   return 'var(--green)';
+  if (l.includes('gpt'))     return '#ff8c42';
+  if (l.includes('gemini'))  return '#4285f4';
+  if (l.includes('mistral')) return '#a855f7';
+  return 'var(--text-dim)';
+}
+
+function fmtTokensShort(n) {
+  if (!n) return '0';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000)     return Math.round(n / 1_000) + 'k';
+  return String(n);
+}
+
+// ── Tasks section toggle ───────────────────────────────────────
+let _tasksOpen = false;
+function toggleTasksSection() {
+  _tasksOpen = !_tasksOpen;
+  const section = document.getElementById('tasks-section');
+  const btn     = document.getElementById('tasks-toggle-btn');
+  if (section) section.style.display = _tasksOpen ? '' : 'none';
+  if (btn) {
+    btn.textContent = (_tasksOpen ? '▼' : '▶') + ' Tasks';
+    btn.classList.toggle('open', _tasksOpen);
+  }
+}
+
 // ── Breakdown ──────────────────────────────────────────────────
 const BREAKDOWN_COLORS = {
   'moltbook-daily':    'var(--cyan)',
@@ -2199,20 +2256,55 @@ const BREAKDOWN_COLORS = {
 };
 
 function renderBreakdown(data) {
-  const list   = document.getElementById('breakdown-list');
-  const dateEl = document.getElementById('breakdown-date');
+  // ── Section A: Model split ─────────────────────────────────
+  const modelList = document.getElementById('model-breakdown-list');
+  if (modelList) {
+    let mbd;
+    if (activeRange === 'week')       mbd = data.breakdown_by_model_week  || [];
+    else if (activeRange === 'month') mbd = data.breakdown_by_model_month || [];
+    else                              mbd = data.breakdown_by_model       || [];
+
+    if (mbd.length === 0) {
+      modelList.innerHTML = `<div class="empty-state">No model data for ${activeRange}</div>`;
+    } else {
+      const maxCost = Math.max(...mbd.map(m => m.cost), 0.001);
+      modelList.innerHTML = mbd.map(m => {
+        const barPct = (m.cost / maxCost) * 100;
+        const color  = modelBarColor(m.label);
+        const tip    = `${fmtTokensShort(m.tokens_in)} in · ${fmtTokensShort(m.tokens_out)} out · ${fmtTokensShort(m.tokens_cache)} cache`;
+        return `
+          <div class="model-row" title="${tip}">
+            <span class="model-label">${m.label}</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:0%;background:${color}" data-target="${barPct.toFixed(1)}"></div>
+            </div>
+            <span class="model-cost">${fmtCost(m.cost)}</span>
+            <span class="model-pct">${m.pct}%</span>
+          </div>`;
+      }).join('');
+
+      // Animate model bars
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          modelList.querySelectorAll('.model-bar[data-target]').forEach(bar => {
+            bar.style.width = bar.dataset.target + '%';
+          });
+        });
+      });
+    }
+  }
+
+  // ── Section B: Task breakdown ──────────────────────────────
+  const list = document.getElementById('breakdown-list');
   if (!list) return;
 
   let bd;
-  if (activeRange === 'week')       { bd = data.breakdown_week  || []; if (dateEl) dateEl.textContent = '7 Days'; }
-  else if (activeRange === 'month') { bd = data.breakdown_month || []; if (dateEl) dateEl.textContent = 'Month'; }
-  else                              { bd = data.breakdown       || []; if (dateEl) dateEl.textContent = 'Today'; }
-
-  // R141: Group by task if configured
-  const cfg = data.config || {};
+  if (activeRange === 'week')       bd = data.breakdown_week  || [];
+  else if (activeRange === 'month') bd = data.breakdown_month || [];
+  else                              bd = data.breakdown       || [];
 
   if (bd.length === 0) {
-    list.innerHTML = `<div class="empty-state" id="breakdown-empty">No data for ${activeRange}</div>`;
+    list.innerHTML = `<div class="empty-state">No task data for ${activeRange}</div>`;
   } else {
     const maxCost  = Math.max(...bd.map(b => b.cost), 0.001);
     const totalCost = bd.reduce((s, b) => s + b.cost, 0);
@@ -2235,14 +2327,14 @@ function renderBreakdown(data) {
           <span class="breakdown-pct">${b.runs}×</span>
         </div>`;
     }).join('') + (bd.length > 1 ? `
-      <div style="display:grid;grid-template-columns:140px 1fr 80px 50px;gap:12px;padding-top:10px;margin-top:6px;border-top:1px solid var(--border);align-items:center">
+      <div style="display:grid;grid-template-columns:130px 1fr 76px 46px;gap:10px;padding-top:10px;margin-top:6px;border-top:1px solid var(--border);align-items:center">
         <span style="font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted)">TOTAL</span>
         <span></span>
         <span style="font-family:var(--mono);font-size:13px;font-weight:700;text-align:right;color:var(--text)">${fmtCost(totalCost)}</span>
         <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:right">${bd.reduce((s,b)=>s+b.runs,0)}×</span>
       </div>` : '');
 
-    // R76: Animate bars from 0 to width after paint
+    // Animate task bars
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         list.querySelectorAll('.breakdown-bar[data-target]').forEach(bar => {
