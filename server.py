@@ -600,7 +600,8 @@ def _build_state_inner():
     def calc_breakdown(event_list):
         session_totals = defaultdict(lambda: {"cost": 0.0, "runs": 0})
         for e in event_list:
-            s = e.get("session", "other")
+            # Use enriched task label (smart label) instead of raw session UUID
+            s = e.get("task") or e.get("session", "other")
             session_totals[s]["cost"] += e.get("cost_usd", 0)
             session_totals[s]["runs"] += 1
         return sorted(
