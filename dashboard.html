@@ -686,6 +686,61 @@ body.light .gt-kpi-lbl{color:rgba(120,40,0,0.6)}
 body.light .gt-kpi-sub{color:rgba(30,30,60,0.4)}
 body.light .gt-subtext{color:rgba(120,40,0,0.55);border-top-color:rgba(160,30,30,0.12)}
 body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
+
+/* ── Efficiency Tab ────────────────────────────────────────────────────────── */
+#efficiency-section{display:none;padding:0 0 32px}
+body.efficiency-mode #efficiency-section{display:block}
+body.efficiency-mode #kpi-row,
+body.efficiency-mode #gt-ticker,
+body.efficiency-mode #gt-details-panel,
+body.efficiency-mode #peak-task-callout,
+body.efficiency-mode #insights-row,
+body.efficiency-mode #taxameter-section,
+body.efficiency-mode #breakdown-col-wrap,
+body.efficiency-mode #events-card,
+body.efficiency-mode #advanced-section{display:none!important}
+body.efficiency-mode .two-col:not(#efficiency-section .two-col){display:none!important}
+
+.eff-score-card{display:flex;align-items:center;gap:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:24px 28px;margin-bottom:16px}
+.eff-grade-bubble{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;font-family:var(--mono);flex-shrink:0;border:3px solid currentColor}
+.eff-grade-A{color:var(--green);background:var(--green-bg);border-color:rgba(0,255,136,0.4);box-shadow:0 0 20px rgba(0,255,136,0.15)}
+.eff-grade-B{color:var(--cyan);background:rgba(0,212,255,0.07);border-color:rgba(0,212,255,0.35);box-shadow:0 0 20px rgba(0,212,255,0.12)}
+.eff-grade-C{color:var(--yellow);background:var(--yellow-bg);border-color:rgba(255,195,0,0.35);box-shadow:0 0 20px rgba(255,195,0,0.12)}
+.eff-grade-D{color:#ff9940;background:rgba(255,153,64,0.07);border-color:rgba(255,153,64,0.35);box-shadow:0 0 20px rgba(255,153,64,0.12)}
+.eff-grade-F{color:var(--red);background:var(--red-bg);border-color:rgba(255,59,92,0.35);box-shadow:0 0 20px rgba(255,59,92,0.12)}
+.eff-score-meta{flex:1}
+.eff-score-num{font-family:var(--mono);font-size:15px;color:var(--text-dim);margin-bottom:4px}
+.eff-score-summary{font-size:15px;font-weight:500;color:var(--text);line-height:1.5}
+.eff-savings-banner{background:linear-gradient(135deg,rgba(0,255,136,0.08),rgba(0,212,255,0.06));border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:14px}
+.eff-savings-icon{font-size:20px}
+.eff-savings-amount{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)}
+.eff-savings-label{color:var(--text-dim)}
+.eff-rule-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.eff-rule-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;transition:border-color 0.2s}
+.eff-rule-card:hover{border-color:var(--border2)}
+.eff-rule-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.eff-rule-title{font-weight:700;font-size:13px;color:var(--text);flex:1}
+.eff-sev-high{background:rgba(255,59,92,0.12);color:var(--red);border:1px solid rgba(255,59,92,0.25);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.eff-sev-medium{background:rgba(255,195,0,0.1);color:var(--yellow);border:1px solid rgba(255,195,0,0.25);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.eff-sev-low{background:rgba(0,255,136,0.07);color:var(--green);border:1px solid rgba(0,255,136,0.2);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.eff-rule-finding{font-size:12px;color:var(--text-dim);margin-bottom:8px;line-height:1.4}
+.eff-rule-rec{font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.eff-rule-rec strong{color:var(--cyan)}
+.eff-rule-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.eff-savings-tag{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)}
+.eff-playbook-btn{font-family:var(--mono);font-size:10px;color:var(--text-muted);cursor:pointer;background:none;border:none;padding:2px 6px;border-radius:3px;border:1px solid var(--border)}
+.eff-playbook-btn:hover{color:var(--text);border-color:var(--border2)}
+.eff-playbook{display:none;margin-top:10px;font-size:11px;color:var(--text-dim);background:var(--bg3);border-radius:6px;padding:10px 12px;line-height:1.6;font-family:var(--mono)}
+.eff-playbook.open{display:block}
+.eff-pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:12px}
+.eff-pattern-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.eff-pattern-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+.eff-pattern-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+.eff-section-title{font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin:20px 0 10px}
+.eff-no-rules{text-align:center;padding:32px;color:var(--text-dim);font-size:14px}
+.eff-loading{text-align:center;padding:48px;color:var(--text-muted);font-family:var(--mono);font-size:13px}
+body.light .eff-score-card,body.light .eff-rule-card,body.light .eff-pattern-card{background:#fff;border-color:rgba(0,0,0,0.08)}
+body.light .eff-playbook{background:#f0f0f4}
 </style>
 </head>
 <body>
@@ -737,6 +792,7 @@ body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
         <button class="filter-tab active" data-range="today">Today</button>
         <button class="filter-tab" data-range="week">7 Days</button>
         <button class="filter-tab" data-range="month">Month</button>
+        <button class="filter-tab" data-range="efficiency" style="border-left:1px solid var(--border);margin-left:4px;padding-left:16px">⚡ Efficiency</button>
       </div>
       <button class="export-btn" onclick="exportCSV()" title="Download CSV (E)">⬇ Export CSV</button>
       <button class="icon-btn" id="focus-btn" onclick="toggleFocus()" title="Focus mode (F)">🎯</button>
@@ -1124,6 +1180,35 @@ body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
           <span id="lm-tasks" style="font-family:var(--mono);font-size:13px;color:var(--text-dim)">–</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Efficiency Section ── -->
+  <div id="efficiency-section">
+    <div id="eff-loading" class="eff-loading">⚡ Analysing usage patterns…</div>
+    <div id="eff-content" style="display:none">
+      <!-- Score card -->
+      <div class="eff-score-card">
+        <div id="eff-grade-bubble" class="eff-grade-bubble eff-grade-A">A</div>
+        <div class="eff-score-meta">
+          <div class="eff-score-num" id="eff-score-num">Score: 100 / 100</div>
+          <div class="eff-score-summary" id="eff-score-summary">Loading…</div>
+        </div>
+      </div>
+      <!-- Savings banner -->
+      <div class="eff-savings-banner" id="eff-savings-banner" style="display:none">
+        <div class="eff-savings-icon">💡</div>
+        <div>
+          <div class="eff-savings-amount" id="eff-savings-amount">$0.00</div>
+          <div class="eff-savings-label">estimated savings available today</div>
+        </div>
+      </div>
+      <!-- Rules -->
+      <div class="eff-section-title">Improvement Opportunities</div>
+      <div class="eff-rule-grid" id="eff-rule-grid"></div>
+      <!-- Pattern stats -->
+      <div class="eff-section-title">Usage Patterns Today</div>
+      <div class="eff-pattern-grid" id="eff-pattern-grid"></div>
     </div>
   </div>
 
@@ -3591,6 +3676,124 @@ function setSSEStatus(connected) {
   }
 }
 
+// ── Efficiency Tab ──────────────────────────────────────────────
+let efficiencyData = null;
+let efficiencyLoaded = false;
+
+function enterEfficiencyMode() {
+  document.body.classList.add('efficiency-mode');
+  if (!efficiencyLoaded) fetchEfficiency();
+}
+
+function exitEfficiencyMode() {
+  document.body.classList.remove('efficiency-mode');
+}
+
+async function fetchEfficiency() {
+  const loading = document.getElementById('eff-loading');
+  const content = document.getElementById('eff-content');
+  if (loading) loading.style.display = 'block';
+  if (content) content.style.display = 'none';
+  try {
+    const res = await fetch('/api/efficiency');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    efficiencyData = await res.json();
+    efficiencyLoaded = true;
+    renderEfficiency(efficiencyData);
+  } catch(err) {
+    console.error('[Efficiency] fetch error:', err);
+    if (loading) loading.textContent = '⚠ Failed to load efficiency data — ' + err.message;
+  }
+}
+
+function renderEfficiency(d) {
+  const loading = document.getElementById('eff-loading');
+  const content = document.getElementById('eff-content');
+  if (loading) loading.style.display = 'none';
+  if (content) content.style.display = 'block';
+
+  // Score card
+  const bubble  = document.getElementById('eff-grade-bubble');
+  const scoreEl = document.getElementById('eff-score-num');
+  const summEl  = document.getElementById('eff-score-summary');
+  if (bubble) {
+    bubble.textContent = d.grade;
+    bubble.className = `eff-grade-bubble eff-grade-${d.grade}`;
+  }
+  if (scoreEl) scoreEl.textContent = `Score: ${d.score} / 100`;
+  if (summEl)  summEl.textContent  = d.summary;
+
+  // Savings banner
+  const banner = document.getElementById('eff-savings-banner');
+  const savAmt = document.getElementById('eff-savings-amount');
+  if (banner && savAmt) {
+    if (d.est_savings_usd > 0.01) {
+      savAmt.textContent = `$${d.est_savings_usd.toFixed(2)}`;
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  // Rule cards
+  const grid = document.getElementById('eff-rule-grid');
+  if (grid) {
+    if (!d.rules || d.rules.length === 0) {
+      grid.innerHTML = `<div class="eff-no-rules">✅ No efficiency issues detected today — excellent habits!</div>`;
+    } else {
+      grid.innerHTML = d.rules.map((r, i) => {
+        const sevEmoji = r.severity === 'high' ? '🔴' : r.severity === 'medium' ? '🟡' : '🟢';
+        const sevClass = `eff-sev-${r.severity}`;
+        const savTag   = r.est_savings_usd > 0.005
+          ? `<span class="eff-savings-tag">💰 Save ~$${r.est_savings_usd.toFixed(2)}</span>` : '';
+        return `<div class="eff-rule-card">
+          <div class="eff-rule-header">
+            <div class="eff-rule-title">${r.title}</div>
+            <span class="${sevClass}">${sevEmoji} ${r.severity.toUpperCase()}</span>
+          </div>
+          <div class="eff-rule-finding">📊 ${r.finding}</div>
+          <div class="eff-rule-rec"><strong>→ ${r.recommendation}</strong></div>
+          <div class="eff-rule-row">
+            ${savTag}
+            ${r.playbook ? `<button class="eff-playbook-btn" onclick="togglePlaybook(this)">📖 Playbook</button>` : ''}
+          </div>
+          ${r.playbook ? `<div class="eff-playbook">${r.playbook}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Pattern stats
+  const pGrid = document.getElementById('eff-pattern-grid');
+  if (pGrid && d.patterns) {
+    const p = d.patterns;
+    const cacheHitPct = (p.cache_hit_rate * 100).toFixed(0);
+    const cacheColor  = p.cache_hit_rate >= 0.85 ? 'var(--green)' : p.cache_hit_rate >= 0.75 ? 'var(--yellow)' : 'var(--red)';
+    const patternItems = [
+      { val: `${cacheHitPct}%`,                label: 'Cache Hit Rate',      color: cacheColor },
+      { val: `${p.main_session_pct}%`,          label: 'Main Session Cost',   color: p.main_session_pct > 70 ? 'var(--yellow)' : 'var(--green)' },
+      { val: `${p.sub_agent_pct}%`,             label: 'Sub-agent Cost',      color: 'var(--cyan)' },
+      { val: `${p.avg_messages_per_burst}`,     label: 'Avg Burst Size',      color: p.avg_messages_per_burst < 3 ? 'var(--red)' : 'var(--green)' },
+      { val: `${p.burst_count}`,                label: 'Bursts Today',        color: 'var(--text)' },
+      { val: `${p.avg_session_hours}h`,         label: 'Session Length',      color: p.avg_session_hours > 4 ? 'var(--yellow)' : 'var(--green)' },
+      { val: `${String(p.peak_hour).padStart(2,'0')}:00`, label: 'Peak Hour', color: 'var(--cyan)' },
+    ];
+    pGrid.innerHTML = patternItems.map(item => `
+      <div class="eff-pattern-card">
+        <div class="eff-pattern-val" style="color:${item.color}">${item.val}</div>
+        <div class="eff-pattern-label">${item.label}</div>
+      </div>
+    `).join('');
+  }
+}
+
+function togglePlaybook(btn) {
+  const pb = btn.closest('.eff-rule-card')?.querySelector('.eff-playbook');
+  if (!pb) return;
+  pb.classList.toggle('open');
+  btn.textContent = pb.classList.contains('open') ? '📖 Hide Playbook' : '📖 Playbook';
+}
+
 // ── Filter tabs ────────────────────────────────────────────────
 document.getElementById('filter-tabs')?.addEventListener('click', (e) => {
   const btn = e.target.closest('.filter-tab');
@@ -3599,7 +3802,12 @@ document.getElementById('filter-tabs')?.addEventListener('click', (e) => {
   btn.classList.add('active');
   activeRange = btn.dataset.range;
   localStorage.setItem('costpilot-range', activeRange);
-  if (state) { renderKPI(state); renderBreakdown(state); }
+  if (activeRange === 'efficiency') {
+    enterEfficiencyMode();
+  } else {
+    exitEfficiencyMode();
+    if (state) { renderKPI(state); renderBreakdown(state); }
+  }
 });
 
 // Restore active range filter tab
@@ -3607,6 +3815,8 @@ document.querySelectorAll('.filter-tab').forEach(b => {
   if (b.dataset.range === activeRange) b.classList.add('active');
   else b.classList.remove('active');
 });
+// If efficiency was the last active tab, enter efficiency mode
+if (activeRange === 'efficiency') enterEfficiencyMode();
 // Restore model filter
 const ms = document.getElementById('model-filter');
 if (ms) ms.value = modelFilter;

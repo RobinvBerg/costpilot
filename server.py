@@ -1231,6 +1231,266 @@ _rate_limits = defaultdict(float)
 _rate_lock   = threading.Lock()
 
 
+# ── Efficiency Score ──────────────────────────────────────────────────────────
+
+def compute_efficiency():
+    """Analyse today's events and return an efficiency score with actionable rules."""
+    from collections import defaultdict as _dd
+
+    today_start = datetime.combine(date.today(), datetime.min.time()).timestamp()
+
+    events, _ = load_events()
+    today_events = [e for e in events if e.get("ts", 0) >= today_start]
+
+    if not today_events:
+        return {
+            "score": 100, "grade": "A",
+            "summary": "No events today yet — nothing to analyse.",
+            "total_cost_usd": 0.0, "est_savings_usd": 0.0,
+            "rules": [],
+            "patterns": {
+                "avg_messages_per_burst": 0, "burst_count": 0,
+                "peak_hour": 0, "main_session_pct": 0, "sub_agent_pct": 0,
+                "cache_hit_rate": 0, "avg_session_hours": 0,
+            },
+        }
+
+    total_cost = sum(e.get("cost_usd", 0) for e in today_events)
+
+    # ── Classify events ──────────────────────────────────────────────────────
+    SYSTEM_TASKS = {"Moltbook Daily Engagement", "Cost Cockpit Auto-Logger"}
+    kira_events = sorted(
+        [e for e in today_events if e.get("task", "") == "KIRA"],
+        key=lambda x: x.get("ts", 0),
+    )
+    subagent_events = [
+        e for e in today_events
+        if e.get("task", "") not in ("KIRA", "") and e.get("task", "") not in SYSTEM_TASKS
+    ]
+    kira_cost    = sum(e.get("cost_usd", 0) for e in kira_events)
+    sub_cost     = sum(e.get("cost_usd", 0) for e in subagent_events)
+    kira_pct     = kira_cost / total_cost if total_cost > 0 else 0
+    sub_pct      = sub_cost  / total_cost if total_cost > 0 else 0
+
+    # ── Cache analysis ───────────────────────────────────────────────────────
+    total_input      = sum(e.get("input_tokens", 0) for e in today_events)
+    total_cache_read = sum(e.get("cache_read_tokens", 0) for e in today_events)
+    denom            = total_cache_read + total_input
+    cache_ratio      = total_cache_read / denom if denom > 0 else 0
+
+    # ── Burst analysis (KIRA) ─────────────────────────────────────────────────
+    bursts = []
+    if kira_events:
+        cur = [kira_events[0]]
+        for ev in kira_events[1:]:
+            if ev.get("ts", 0) - cur[-1].get("ts", 0) > 300:
+                bursts.append(cur)
+                cur = [ev]
+            else:
+                cur.append(ev)
+        bursts.append(cur)
+    burst_count    = len(bursts)
+    avg_burst_size = len(kira_events) / burst_count if burst_count > 0 else 0
+    avg_msg_cost   = kira_cost / len(kira_events) if kira_events else 0
+
+    # ── Session hours ────────────────────────────────────────────────────────
+    if kira_events:
+        session_hours = (
+            max(e.get("ts", 0) for e in kira_events)
+            - min(e.get("ts", 0) for e in kira_events)
+        ) / 3600
+    else:
+        session_hours = 0
+
+    # ── Sub-agent sessions per hour ──────────────────────────────────────────
+    sub_sessions_by_hour = _dd(set)
+    sub_cost_by_session  = _dd(float)
+    for ev in subagent_events:
+        h = int(ev.get("ts", 0) // 3600)
+        s = ev.get("session", "")
+        sub_sessions_by_hour[h].add(s)
+        sub_cost_by_session[s] += ev.get("cost_usd", 0)
+    max_sub_in_hour = max((len(v) for v in sub_sessions_by_hour.values()), default=0)
+    busiest_sub_hour_sessions = []
+    if sub_sessions_by_hour:
+        busiest_h = max(sub_sessions_by_hour, key=lambda k: len(sub_sessions_by_hour[k]))
+        if len(sub_sessions_by_hour[busiest_h]) > 2:
+            busiest_sub_hour_sessions = list(sub_sessions_by_hour[busiest_h])
+
+    # ── Off-peak ─────────────────────────────────────────────────────────────
+    peak_event_count = sum(
+        1 for ev in today_events
+        if 9 <= datetime.fromtimestamp(ev.get("ts", 0)).hour < 12
+    )
+    peak_pct = peak_event_count / len(today_events) if today_events else 0
+
+    # ── Peak hour by cost ─────────────────────────────────────────────────────
+    hour_costs = _dd(float)
+    for ev in today_events:
+        hour_costs[datetime.fromtimestamp(ev.get("ts", 0)).hour] += ev.get("cost_usd", 0)
+    peak_hour = max(hour_costs, key=hour_costs.get) if hour_costs else 0
+
+    # ── Rules ────────────────────────────────────────────────────────────────
+    rules = []
+
+    # Rule 1 — message_batching
+    if burst_count > 5 and avg_burst_size < 3:
+        ideal_bursts  = burst_count * avg_burst_size / 3
+        est_savings   = max(0.0, (burst_count - ideal_bursts) * avg_msg_cost * 0.4)
+        rules.append({
+            "id": "message_batching",
+            "title": "Batch your messages",
+            "severity": "high",
+            "finding": (
+                f"{len(kira_events)} KIRA messages sent in {burst_count} bursts today "
+                f"(avg {avg_burst_size:.1f} per burst)"
+            ),
+            "recommendation": "Bundle 3–5 related questions into one message per burst",
+            "est_savings_usd": round(est_savings, 2),
+            "playbook": (
+                f"Every extra message in a long session adds ~${avg_msg_cost:.2f} due to "
+                "growing context. Batching 3–5 questions at once halves the overhead cost."
+            ),
+        })
+
+    # Rule 2 — long_session
+    if session_hours > 4 and kira_events:
+        est_savings = round(kira_cost * 0.20, 2)
+        rules.append({
+            "id": "long_session",
+            "title": "Long session — context bloat risk",
+            "severity": "medium",
+            "finding": (
+                f"KIRA session active {session_hours:.1f}h today — "
+                f"context accumulates and inflates token costs"
+            ),
+            "recommendation": "Start a fresh session for unrelated tasks to reset context cost",
+            "est_savings_usd": est_savings,
+            "playbook": (
+                f"After {session_hours:.0f}h of continuous chat, your context window carries "
+                f"{len(kira_events)} API calls of history. Each new message re-sends all that "
+                "context. Starting a new session for a new topic resets token cost to near zero."
+            ),
+        })
+
+    # Rule 3 — main_session_overuse
+    if kira_pct > 0.70 and total_cost > 0:
+        est_savings = round((kira_pct - 0.50) * kira_cost * 0.3, 2)
+        rules.append({
+            "id": "main_session_overuse",
+            "title": "Main session overuse",
+            "severity": "medium",
+            "finding": (
+                f"KIRA (main session) is {kira_pct*100:.0f}% of today's spend "
+                f"(${kira_cost:.2f} of ${total_cost:.2f} total)"
+            ),
+            "recommendation": "Spawn sub-agents for tasks >10 min — they start with clean context",
+            "est_savings_usd": est_savings,
+            "playbook": (
+                "Sub-agents get a fresh context window, so they cost far less per token than a "
+                "heavy main session. For coding tasks, research, or long autonomous runs — "
+                "delegate to a sub-agent and keep the main session lightweight."
+            ),
+        })
+
+    # Rule 4 — low_cache_efficiency
+    if cache_ratio < 0.75 and denom > 0:
+        optimal   = 0.85
+        est_savings = max(0.0, round(
+            (optimal - cache_ratio) * total_cache_read * 3.0 / 1_000_000, 2
+        ))
+        rules.append({
+            "id": "low_cache_efficiency",
+            "title": "Low cache utilisation",
+            "severity": "medium",
+            "finding": (
+                f"Cache hit rate is {cache_ratio*100:.0f}% (ideal ≥75%). "
+                f"{total_input:,} uncached input tokens today"
+            ),
+            "recommendation": "Keep system prompts stable and reuse session contexts to boost cache hits",
+            "est_savings_usd": est_savings,
+            "playbook": (
+                "Claude caches prompt prefixes automatically. Stable system prompts that don't "
+                "change between calls get cached at $0.30/M instead of $3.00/M — a 10× saving. "
+                "Avoid randomising your system prompt between requests."
+            ),
+        })
+
+    # Rule 5 — sequential_subagents
+    if busiest_sub_hour_sessions:
+        n_seq        = len(busiest_sub_hour_sessions)
+        avg_sub_cost = (
+            mean([sub_cost_by_session[s] for s in sub_cost_by_session]) if sub_cost_by_session else 0
+        )
+        est_savings = round(max(0.0, (n_seq - 1) * avg_sub_cost * 0.15), 2)
+        rules.append({
+            "id": "sequential_subagents",
+            "title": "Parallelise sub-agents",
+            "severity": "low",
+            "finding": (
+                f"{n_seq} sub-agents ran sequentially in the same hour — could run in parallel"
+            ),
+            "recommendation": "Run independent sub-agents concurrently to cut wall-clock time",
+            "est_savings_usd": est_savings,
+            "playbook": (
+                "Independent tasks (e.g. research + code generation) can run in parallel. "
+                "Parallel sub-agents finish faster and don't bloat each other's context."
+            ),
+        })
+
+    # Rule 6 — off_peak_scheduling
+    if peak_pct > 0.30:
+        rules.append({
+            "id": "off_peak_scheduling",
+            "title": "Schedule batch jobs off-peak",
+            "severity": "low",
+            "finding": (
+                f"{peak_pct*100:.0f}% of today's events ran during 09:00–12:00 peak hours"
+            ),
+            "recommendation": "Move cron jobs and batch work to nights or off-peak hours",
+            "est_savings_usd": 0.0,
+            "playbook": (
+                "While Anthropic pricing is flat, off-peak scheduling avoids rate-limit collisions "
+                "and keeps your main session responsive during productive work hours."
+            ),
+        })
+
+    # ── Score ────────────────────────────────────────────────────────────────
+    deductions = {"high": 20, "medium": 10, "low": 5}
+    score = max(0, 100 - sum(deductions.get(r["severity"], 0) for r in rules))
+    if score >= 90:   grade = "A"
+    elif score >= 75: grade = "B"
+    elif score >= 60: grade = "C"
+    elif score >= 40: grade = "D"
+    else:             grade = "F"
+
+    total_savings = round(sum(r["est_savings_usd"] for r in rules), 2)
+    if total_savings > 0.01:
+        summary = f"You spent ${total_cost:.2f} today. ~${total_savings:.2f} avoidable with better habits."
+    elif not rules:
+        summary = f"You spent ${total_cost:.2f} today. Great efficiency — keep it up! 🏆"
+    else:
+        summary = f"You spent ${total_cost:.2f} today. Minor improvements possible."
+
+    return {
+        "score": score,
+        "grade": grade,
+        "summary": summary,
+        "total_cost_usd": round(total_cost, 4),
+        "est_savings_usd": total_savings,
+        "rules": rules,
+        "patterns": {
+            "avg_messages_per_burst": round(avg_burst_size, 1),
+            "burst_count": burst_count,
+            "peak_hour": peak_hour,
+            "main_session_pct": round(kira_pct * 100, 1),
+            "sub_agent_pct": round(sub_pct * 100, 1),
+            "cache_hit_rate": round(cache_ratio, 3),
+            "avg_session_hours": round(session_hours, 1),
+        },
+    }
+
+
 def check_rate_limit(key, interval_sec):
     """Return True if allowed, False if rate-limited."""
     with _rate_lock:
@@ -1673,6 +1933,9 @@ class Handler(BaseHTTPRequestHandler):
                 "cost":     round(cost * rate, 6),
                 "currency": cfg.get("currency", "USD"),
             })
+
+        elif path == "/api/efficiency":
+            self._json(compute_efficiency())
 
         elif path.startswith("/api/"):
             self._json({"error": "Not found"}, status=404)
