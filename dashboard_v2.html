@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIRA · Cost Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #050508;
+  --bg2:         #0d0d14;
+  --bg3:         #131320;
+  --border:      rgba(255,255,255,0.06);
+  --border2:     rgba(255,255,255,0.10);
+
+  --green:       #00ff88;
+  --green-dim:   #00cc6a;
+  --green-glow:  rgba(0,255,136,0.15);
+  --green-bg:    rgba(0,255,136,0.07);
+
+  --yellow:      #ffc300;
+  --yellow-dim:  #cc9c00;
+  --yellow-glow: rgba(255,195,0,0.15);
+  --yellow-bg:   rgba(255,195,0,0.07);
+
+  --red:         #ff3b5c;
+  --red-dim:     #cc2e49;
+  --red-glow:    rgba(255,59,92,0.15);
+  --red-bg:      rgba(255,59,92,0.07);
+
+  --gold:        #f5c518;
+  --cyan:        #00d4ff;
+  --cyan-dim:    #0099bb;
+
+  --text:        #e8e8f0;
+  --text-dim:    #7a7a96;
+  --text-muted:  #45455a;
+
+  --mono:        'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --sans:        'Inter', 'SF Pro Display', system-ui, sans-serif;
+
+  --radius:      6px;
+  --radius-sm:   4px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+/* ── Layout ────────────────────────────────────────────────── */
+.cockpit {
+  max-width: 2800px;
+  margin: 0 auto;
+  padding: 20px 28px 40px;
+  display: grid;
+  gap: 16px;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--green), transparent);
+  opacity: 0.6;
+}
+
+.header-left { display: flex; align-items: center; gap: 20px; }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 0 20px rgba(0,212,255,0.3);
+}
+
+.logo-text {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.header-clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+#clock-time {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+/* Timeframe filter */
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg3);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.filter-tab {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--text-dim);
+  border: none;
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.filter-tab:hover { color: var(--text); }
+.filter-tab.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,136,0.2));
+  color: var(--cyan);
+  border: 1px solid rgba(0,212,255,0.3);
+}
+
+/* Live indicator */
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  background: var(--red-bg);
+  border: 1px solid rgba(255,59,92,0.3);
+  border-radius: 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: pulse-red 1.4s infinite;
+  box-shadow: 0 0 8px var(--red);
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ── KPI Row ────────────────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--bar-color, var(--green));
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--bar-color, var(--green));
+  opacity: 0.25;
+}
+
+.kpi-card.status-green { --bar-color: var(--green); }
+.kpi-card.status-yellow { --bar-color: var(--yellow); }
+.kpi-card.status-red { --bar-color: var(--red); }
+.kpi-card.status-blue { --bar-color: var(--cyan); }
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-value {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 12px;
+  color: var(--text);
+  transition: all 0.3s;
+}
+
+.kpi-card.status-green .kpi-value { color: var(--green); }
+.kpi-card.status-red .kpi-value { color: var(--red); }
+.kpi-card.status-yellow .kpi-value { color: var(--yellow); }
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  background: var(--bar-color, var(--green));
+  box-shadow: 0 0 8px var(--bar-color, var(--green));
+}
+
+/* ── Taxameter (LIVE running cost) ─────────────────────────── */
+.taxameter-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.taxameter-section.has-running {
+  border-color: rgba(255,59,92,0.3);
+  background: linear-gradient(135deg, var(--bg2), rgba(255,59,92,0.04));
+}
+
+.taxameter-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.taxameter-section.has-running::before { opacity: 1; }
+
+.taxameter-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 280px;
+}
+
+.taxameter-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.taxameter-counter {
+  font-family: var(--mono);
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color 0.3s, text-shadow 0.3s;
+  display: flex;
+  align-items: flex-start;
+}
+
+.taxameter-counter .dollar { font-size: 32px; margin-top: 8px; }
+.taxameter-counter .decimals { font-size: 36px; margin-top: 12px; opacity: 0.8; }
+
+.taxameter-counter.is-running {
+  color: var(--red);
+  text-shadow: 0 0 40px rgba(255,59,92,0.4);
+  animation: taxameter-tick 0.1s steps(1) infinite;
+}
+
+@keyframes taxameter-tick {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.92; }
+}
+
+.taxameter-idle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  margin-top: 8px;
+  letter-spacing: 0.05em;
+}
+
+.taxameter-tasks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Running Tasks ──────────────────────────────────────────── */
+.task-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto auto 80px 28px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.3s;
+}
+
+.task-row.running {
+  border-color: rgba(255,59,92,0.2);
+  background: linear-gradient(135deg, var(--bg3), rgba(255,59,92,0.04));
+}
+
+.task-row.completed { opacity: 0.75; }
+.task-row.failed { border-color: rgba(255,59,92,0.4); }
+
+.task-icon { font-size: 16px; text-align: center; }
+
+.task-name {
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-cost {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.task-duration {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.task-bar-wrap {
+  position: relative;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.task-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 1s linear;
+}
+
+.task-row.running .task-bar {
+  background: linear-gradient(90deg, var(--red-dim), var(--red));
+  box-shadow: 0 0 8px var(--red-glow);
+  animation: task-bar-pulse 2s ease-in-out infinite;
+}
+
+@keyframes task-bar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.status-dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse-red 1.4s infinite; }
+.status-dot.dim    { background: var(--text-muted); }
+
+/* ── Two-column row ─────────────────────────────────────────── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title-dot {
+  width: 6px; height: 6px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--cyan);
+}
+
+/* ── Breakdown bars ─────────────────────────────────────────── */
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 70px 50px;
+  align-items: center;
+  gap: 12px;
+}
+
+.breakdown-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breakdown-bar-wrap {
+  height: 8px;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.breakdown-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.breakdown-cost {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.breakdown-runs {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── Chart container ────────────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+/* ── Recent Events table ────────────────────────────────────── */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 80px 70px 60px 30px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+  font-size: 12px;
+}
+
+.event-row:hover { background: var(--bg3); }
+
+.event-time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.event-task {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-model {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.event-cost {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.event-dur {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── Anomaly banner ─────────────────────────────────────────── */
+.anomaly-bar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--red-bg);
+  border: 1px solid rgba(255,59,92,0.3);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--red);
+  animation: anomaly-flash 2s ease-in-out infinite;
+}
+
+.anomaly-bar.visible { display: flex; }
+
+@keyframes anomaly-flash {
+  0%, 100% { border-color: rgba(255,59,92,0.3); }
+  50% { border-color: rgba(255,59,92,0.7); }
+}
+
+/* ── Tokens section ─────────────────────────────────────────── */
+.token-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.token-stat {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.token-stat-val {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: -0.01em;
+}
+
+.token-stat-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+/* ── Events table header ─────────────────────────────────────── */
+.events-header {
+  display: grid;
+  grid-template-columns: 70px 1fr 80px 70px 60px 30px;
+  gap: 10px;
+  padding: 0 12px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  z-index: 2;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.footer {
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.footer-left { display: flex; gap: 20px; }
+
+/* ── Scan line effect ───────────────────────────────────────── */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ── Number roll animation ──────────────────────────────────── */
+.roll {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Responsive / ultrawide ─────────────────────────────────── */
+@media (min-width: 2000px) {
+  body { font-size: 15px; }
+  .kpi-value { font-size: 44px; }
+  .taxameter-counter { font-size: 80px; }
+  .taxameter-counter .dollar { font-size: 40px; margin-top: 12px; }
+  .taxameter-counter .decimals { font-size: 44px; margin-top: 18px; }
+  .card-title { font-size: 11px; }
+  .chart-wrap { height: 280px; }
+}
+
+@media (max-width: 600px) {
+  .cockpit { padding: 12px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .kpi-value { font-size: 28px; }
+  .taxameter-counter { font-size: 48px; }
+  .taxameter-counter .dollar { font-size: 24px; margin-top: 6px; }
+  .taxameter-counter .decimals { font-size: 28px; margin-top: 8px; }
+  .taxameter-section { flex-direction: column; gap: 16px; }
+  .taxameter-main { min-width: auto; width: 100%; }
+  .header { flex-wrap: wrap; gap: 12px; }
+  .breakdown-row { grid-template-columns: 100px 1fr 60px; }
+  .breakdown-runs { display: none; }
+  .event-row { grid-template-columns: 60px 1fr 70px 30px; }
+  .event-model, .event-dur { display: none; }
+}
+
+/* ── Grid line background ───────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cockpit { position: relative; z-index: 1; }
+
+/* Model badge */
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.model-badge.sonnet {
+  background: rgba(0,212,255,0.12);
+  color: var(--cyan);
+  border: 1px solid rgba(0,212,255,0.2);
+}
+
+.model-badge.opus {
+  background: rgba(245,197,24,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(245,197,24,0.2);
+}
+
+.model-badge.haiku {
+  background: rgba(0,255,136,0.12);
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.2);
+}
+
+/* Session color pills */
+.session-pill {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.session-moltbook    { background: rgba(0,212,255,0.1); color: var(--cyan); }
+.session-mallorca    { background: rgba(245,197,24,0.1); color: var(--gold); }
+.session-main        { background: rgba(0,255,136,0.1); color: var(--green); }
+.session-other       { background: rgba(120,120,150,0.1); color: var(--text-dim); }
+
+/* ── No-running overlay ─────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+}
+
+/* glow pulse on header top border */
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="cockpit">
+
+  <!-- ── Anomaly Banner ── -->
+  <div class="anomaly-bar" id="anomaly-bar">
+    <span>⚠️</span>
+    <span id="anomaly-text">Anomalie erkannt</span>
+  </div>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <div class="logo-text">KIRA // COST COCKPIT</div>
+          <div class="logo-sub">AI SPEND MONITOR · robin@moltbook · PORT 8742</div>
+        </div>
+      </div>
+      <div class="header-clock">
+        <div id="clock-date">Loading…</div>
+        <div id="clock-time">00:00:00</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="filter-tabs" id="filter-tabs">
+        <button class="filter-tab active" data-range="today">Heute</button>
+        <button class="filter-tab" data-range="week">7 Tage</button>
+        <button class="filter-tab" data-range="month">Monat</button>
+      </div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+  </header>
+
+  <!-- ── KPI Cards ── -->
+  <div class="kpi-row" id="kpi-row">
+    <!-- Cards filled by JS -->
+    <div class="kpi-card status-green" id="kpi-today">
+      <div class="kpi-label"><span id="kpi-today-label">Heute</span> <span id="kpi-today-status">🟢</span></div>
+      <div class="kpi-value" id="kpi-today-val">$0.00</div>
+      <div class="kpi-sub" id="kpi-today-sub">0 tasks · 0 tokens</div>
+      <div class="progress-bar"><div class="progress-fill" id="kpi-today-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="kpi-card status-red" id="kpi-running">
+      <div class="kpi-label">Laufend <span id="kpi-running-icon">⬜</span></div>
+      <div class="kpi-value" id="kpi-running-val">$0.000000</div>
+      <div class="kpi-sub" id="kpi-running-sub">kein aktiver Task</div>
+    </div>
+
+    <div class="kpi-card status-green" id="kpi-avg">
+      <div class="kpi-label">⌀ Pro Task <span id="kpi-avg-status">🟢</span></div>
+      <div class="kpi-value" id="kpi-avg-val">$0.00</div>
+      <div class="kpi-sub" id="kpi-avg-sub">heute · completed</div>
+    </div>
+
+    <div class="kpi-card status-yellow" id="kpi-proj">
+      <div class="kpi-label">Prognose / Tag <span id="kpi-proj-status">🟡</span></div>
+      <div class="kpi-value" id="kpi-proj-val">$0</div>
+      <div class="kpi-sub" id="kpi-proj-sub">hochgerechnet</div>
+    </div>
+  </div>
+
+  <!-- ── Live Taxameter + Active Tasks ── -->
+  <div class="taxameter-section" id="taxameter-section">
+    <div class="taxameter-main">
+      <div class="taxameter-label">Taxameter · Laufende Kosten</div>
+      <div class="taxameter-counter" id="taxameter-counter">
+        <span class="dollar">$</span>
+        <span id="taxi-int">0</span>
+        <span class="decimals" id="taxi-dec">.000000</span>
+      </div>
+      <div class="taxameter-idle" id="taxameter-idle">● Kein aktiver Task — wartet auf nächsten Job</div>
+      <div class="taxameter-idle" id="taxameter-rate" style="display:none; color:var(--red)"></div>
+    </div>
+    <div class="taxameter-tasks" id="taxameter-tasks">
+      <!-- Running/recent tasks -->
+    </div>
+  </div>
+
+  <!-- ── Two-column: Breakdown + Weekly Chart ── -->
+  <div class="two-col">
+
+    <!-- Tages-Breakdown -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-dot"></div>
+        Tages-Breakdown
+        <span style="margin-left:auto; font-family: var(--mono); font-size:10px; color: var(--text-muted)" id="breakdown-date">Heute</span>
+      </div>
+      <div class="breakdown-list" id="breakdown-list">
+        <!-- filled by JS -->
+      </div>
+      <div class="token-stats" id="token-stats" style="grid-template-columns: repeat(4,1fr)">
+        <div class="token-stat">
+          <div class="token-stat-val" id="stat-input">0</div>
+          <div class="token-stat-lbl">Input</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-val" id="stat-cache" style="color:var(--green)">0</div>
+          <div class="token-stat-lbl">Cache Hit</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-val" id="stat-output">0</div>
+          <div class="token-stat-lbl">Output</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-val" id="stat-tasks">0</div>
+          <div class="token-stat-lbl">Tasks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7-Tage Chart -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-dot" style="background:var(--gold); box-shadow:0 0 6px var(--gold)"></div>
+        Letzte 7 Tage
+        <span style="margin-left:auto; font-family: var(--mono); font-size:10px; color: var(--text-muted)" id="week-total">Gesamt: $0.00</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="weekly-chart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Recent Events ── -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-dot" style="background:var(--text-dim); box-shadow:none"></div>
+      Letzte Events
+      <span style="margin-left:auto; font-family: var(--mono); font-size:10px; color: var(--text-muted); cursor:pointer" onclick="toggleAllEvents()">▼ alle</span>
+    </div>
+    <div class="events-header">
+      <span>Zeit</span>
+      <span>Task / Session</span>
+      <span>Modell</span>
+      <span style="text-align:right">Kosten</span>
+      <span style="text-align:right">Dauer</span>
+      <span></span>
+    </div>
+    <div class="events-list" id="events-list">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <div class="footer-left">
+      <span id="footer-update">Letztes Update: –</span>
+      <span>Events: <span id="footer-count">0</span></span>
+      <span id="footer-anomalies" style="color:var(--red); display:none">⚠ <span id="footer-anomaly-count">0</span> Anomalien</span>
+    </div>
+    <div style="display:flex; gap:20px; align-items:center">
+      <span style="color:var(--cyan)">Sonnet $3/$15/M</span>
+      <span style="color:var(--gold)">Opus $15/$75/M</span>
+      <span>in/out · green&lt;$3 · yellow&lt;$10 · red≥$10</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JavaScript
+═══════════════════════════════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────
+let state = null;
+let weeklyChart = null;
+let weeklyData = [];
+let activeRange = 'today';
+let prevTodayCost = 0;
+let showAllEvents = false;
+
+// Simulated taxameter increment (between polls)
+let taxRunning = false;
+let taxValue = 0;
+let taxRate = 0; // $ per second
+let taxLastTick = Date.now();
+
+// ── Clock ─────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+  const d = `${days[now.getDay()]} ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const t = [
+    String(now.getHours()).padStart(2,'0'),
+    String(now.getMinutes()).padStart(2,'0'),
+    String(now.getSeconds()).padStart(2,'0')
+  ].join(':');
+  document.getElementById('clock-date').textContent = d;
+  document.getElementById('clock-time').textContent = t;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Taxameter tick ─────────────────────────────────────────────
+function updateTaxameter() {
+  const now = Date.now();
+  const dt = (now - taxLastTick) / 1000;
+  taxLastTick = now;
+
+  if (taxRunning && taxRate > 0) {
+    taxValue += taxRate * dt;
+    // Also live-update the Running KPI card
+    const runValEl = document.getElementById('kpi-running-val');
+    if (runValEl) runValEl.textContent = fmtCost(taxValue, 6);
+    // Show rate
+    const rateEl = document.getElementById('taxameter-rate');
+    if (rateEl) {
+      const ratePerMin = taxRate * 60;
+      rateEl.textContent = `▶ ≈${fmtCost(taxRate)}/s  ·  ≈${fmtCost(ratePerMin)}/min`;
+      rateEl.style.display = '';
+    }
+  } else {
+    const rateEl = document.getElementById('taxameter-rate');
+    if (rateEl) rateEl.style.display = 'none';
+  }
+
+  renderTaxameter(taxValue);
+}
+
+function renderTaxameter(val) {
+  const el = document.getElementById('taxameter-counter');
+  const isRunning = taxRunning && taxRate > 0;
+
+  el.classList.toggle('is-running', isRunning);
+
+  const intPart = Math.floor(val);
+  const decPart = (val - intPart).toFixed(6).slice(1); // ".000000"
+
+  document.getElementById('taxi-int').textContent = intPart;
+  document.getElementById('taxi-dec').textContent = decPart;
+}
+
+setInterval(updateTaxameter, 80);
+
+// ── Format helpers ─────────────────────────────────────────────
+function fmtCost(v, digits = 4) {
+  if (v === undefined || v === null || isNaN(v)) return '$–';
+  v = Number(v);
+  if (v === 0) return '$0.00';
+  if (v < 0.0001) return '$' + v.toFixed(6);
+  if (v < 1.00)  return '$' + v.toFixed(4); // $0.0931, $0.2277, $0.9981
+  if (v < 10)    return '$' + v.toFixed(3); // $1.079, $5.074
+  return '$' + v.toFixed(2);                 // $10.17, $100.00
+}
+
+function fmtTokens(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'k';
+  return String(n);
+}
+
+function fmtDuration(sec) {
+  if (!sec || sec === 0) return '–';
+  if (sec < 60) return Math.round(sec) + 's';
+  if (sec < 3600) return Math.round(sec / 60) + 'm';
+  return (sec / 3600).toFixed(1) + 'h';
+}
+
+function fmtAge(sec) {
+  if (sec < 60) return 'gerade eben';
+  if (sec < 3600) return Math.round(sec / 60) + 'm ago';
+  if (sec < 86400) return Math.round(sec / 3600) + 'h ago';
+  return Math.round(sec / 86400) + 'd ago';
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  return String(d.getHours()).padStart(2,'0') + ':'
+       + String(d.getMinutes()).padStart(2,'0');
+}
+
+function modelBadge(model) {
+  if (!model) return '';
+  if (model.includes('sonnet')) return `<span class="model-badge sonnet">Sonnet</span>`;
+  if (model.includes('opus'))   return `<span class="model-badge opus">Opus</span>`;
+  if (model.includes('haiku'))  return `<span class="model-badge haiku">Haiku</span>`;
+  return `<span class="model-badge sonnet">${model.split('-').slice(-1)[0]}</span>`;
+}
+
+function sessionClass(session) {
+  if (!session) return 'session-other';
+  if (session.includes('moltbook')) return 'session-moltbook';
+  if (session.includes('mallorca') || session.includes('subagent')) return 'session-mallorca';
+  if (session.includes('main')) return 'session-main';
+  return 'session-other';
+}
+
+function sessionLabel(session) {
+  if (!session) return 'other';
+  if (session.includes('moltbook')) return 'moltbook';
+  if (session.includes('mallorca') || session.includes('subagent')) return 'mallorca';
+  if (session.includes('main')) return 'main';
+  return session;
+}
+
+function statusDot(status, cost, taskName) {
+  const name = (taskName || '').toLowerCase();
+  let color = 'dim';
+  if (status === 'running') { color = 'red'; return `<div class="status-dot red"></div>`; }
+  if (status === 'failed')  { return `<div class="status-dot red"></div>`; }
+
+  if (name.includes('moltbook')) {
+    color = cost < 0.15 ? 'green' : cost < 0.30 ? 'yellow' : 'red';
+  } else if (name.includes('mallorca') || name.includes('agent')) {
+    color = cost < 2.00 ? 'green' : cost < 5.00 ? 'yellow' : 'red';
+  } else {
+    color = cost < 1.00 ? 'green' : cost < 3.00 ? 'yellow' : 'red';
+  }
+  return `<div class="status-dot ${color}"></div>`;
+}
+
+// ── KPI rendering ──────────────────────────────────────────────
+function renderKPI(data) {
+  const kpi = data.kpi;
+  const st  = data.status;
+
+  // Determine display cost by range
+  let displayCost, displayLabel, cardLabel;
+  if (activeRange === 'today') {
+    displayCost = kpi.today_cost;
+    displayLabel = `${kpi.tasks_today} Tasks`;
+    cardLabel = 'Heute';
+  } else if (activeRange === 'week') {
+    displayCost = kpi.week_cost;
+    displayLabel = '7 Tage';
+    cardLabel = '7 Tage';
+  } else {
+    displayCost = kpi.month_cost;
+    displayLabel = 'Monat';
+    cardLabel = 'Monat';
+  }
+  document.getElementById('kpi-today-label').textContent = cardLabel;
+
+  // Today card
+  const todayCard = document.getElementById('kpi-today');
+  todayCard.className = `kpi-card status-${st.day}`;
+  document.getElementById('kpi-today-val').textContent = fmtCost(displayCost);
+  document.getElementById('kpi-today-sub').textContent = `${displayLabel} · ${fmtTokens(kpi.tokens_in)} in · ${fmtTokens(kpi.tokens_out)} out`;
+  const progress = Math.min(100, (kpi.today_cost / 10) * 100); // $10 = 100%
+  document.getElementById('kpi-today-bar').style.width = progress + '%';
+  const icons = { green:'🟢', yellow:'🟡', red:'🔴' };
+  document.getElementById('kpi-today-status').textContent = icons[st.day] || '⬜';
+
+  // Running card
+  const runCard = document.getElementById('kpi-running');
+  if (st.has_running) {
+    runCard.className = 'kpi-card status-red';
+    document.getElementById('kpi-running-val').textContent = fmtCost(kpi.running_cost, 6);
+    document.getElementById('kpi-running-sub').innerHTML = `🔴 <span style="color:var(--red)">AKTIV</span>`;
+    document.getElementById('kpi-running-icon').textContent = '🔴';
+  } else {
+    runCard.className = 'kpi-card status-blue';
+    document.getElementById('kpi-running-val').textContent = fmtCost(kpi.running_cost, 6);
+    document.getElementById('kpi-running-sub').textContent = 'kein aktiver Task';
+    document.getElementById('kpi-running-icon').textContent = '⬜';
+  }
+
+  // Avg task card
+  const avgCard = document.getElementById('kpi-avg');
+  avgCard.className = `kpi-card status-${st.avg}`;
+  document.getElementById('kpi-avg-val').textContent = fmtCost(kpi.avg_task_cost);
+  document.getElementById('kpi-avg-sub').textContent = `heute · ${kpi.tasks_today} completed`;
+  document.getElementById('kpi-avg-status').textContent = icons[st.avg] || '⬜';
+
+  // Projection card
+  const projCard = document.getElementById('kpi-proj');
+  projCard.className = `kpi-card status-${st.projection}`;
+  document.getElementById('kpi-proj-val').textContent = kpi.projection > 0 ? `$${Math.round(kpi.projection)}` : '–';
+  document.getElementById('kpi-proj-sub').textContent = `hochgerechnet auf 24h`;
+  document.getElementById('kpi-proj-status').textContent = icons[st.projection] || '⬜';
+
+  // Token stats
+  document.getElementById('stat-input').textContent = fmtTokens(kpi.tokens_in);
+  document.getElementById('stat-cache').textContent = fmtTokens(kpi.tokens_cache || 0);
+  document.getElementById('stat-output').textContent = fmtTokens(kpi.tokens_out);
+  document.getElementById('stat-tasks').textContent = kpi.tasks_today;
+
+  // Week total for chart label
+  document.getElementById('week-total').textContent = `Gesamt: ${fmtCost(kpi.week_cost)}`;
+}
+
+// ── Taxameter state ────────────────────────────────────────────
+function renderTaxameterSection(data) {
+  const running = data.running || [];
+  const section = document.getElementById('taxameter-section');
+  const tasksEl = document.getElementById('taxameter-tasks');
+  const idleEl  = document.getElementById('taxameter-idle');
+
+  section.classList.toggle('has-running', running.length > 0);
+
+  if (running.length > 0) {
+    taxRunning = true;
+    // Reset taxValue to server's last known running cost if server reports higher
+    // (to avoid drift after reconnect / polling gap)
+    if (data.kpi.running_cost > taxValue) {
+      taxValue = data.kpi.running_cost;
+    }
+
+    // Better rate estimate: cost / elapsed for each task, summed
+    let totalRate = 0;
+    for (const t of running) {
+      const elapsed = t.duration_sec || 30;
+      const taskCost = t.cost_usd || t.cost || 0;
+      if (elapsed > 5) {
+        totalRate += taskCost / elapsed;
+      } else {
+        // Fallback: assume Sonnet output rate ~30 tok/s × $15/M = $0.00045/s
+        totalRate += 0.00045;
+      }
+    }
+    taxRate = totalRate;
+    idleEl.style.display = 'none';
+  } else {
+    taxRunning = false;
+    taxRate    = 0;
+    // Idle: reset to 0, don't carry stale value
+    taxValue   = 0;
+    idleEl.style.display = 'block';
+    renderTaxameter(0);
+  }
+
+  // Render recent tasks (running first, then last 5 completed)
+  // Normalize running events (have cost_usd) to same shape as recent tasks (have cost)
+  const normalizedRunning = running.map(t => ({
+    ...t,
+    cost: t.cost !== undefined ? t.cost : (t.cost_usd || 0),
+    task: t.task || 'Unknown',
+  }));
+  const recent = data.recent || [];
+  const toShow = running.length > 0
+    ? [...normalizedRunning, ...recent.filter(t => t.status !== 'running').slice(0, 4)]
+    : recent.slice(0, 6);
+
+  if (toShow.length === 0) {
+    tasksEl.innerHTML = '<div class="empty-state">Keine Tasks in der letzten Zeit</div>';
+    return;
+  }
+
+  const maxCost = Math.max(...toShow.map(t => t.cost), 0.001);
+
+  tasksEl.innerHTML = toShow.map(t => {
+    const icon = t.status === 'running' ? '🔄' : t.status === 'failed' ? '❌' : '✅';
+    const bar  = Math.min(100, (t.cost / maxCost) * 100);
+    const dot  = statusDot(t.status, t.cost, t.task);
+    const dur  = t.status === 'running'
+      ? `<span style="color:var(--red); font-family:var(--mono); font-size:11px">LIVE</span>`
+      : `<span style="font-family:var(--mono); font-size:11px; color:var(--text-dim)">${fmtDuration(t.duration_sec)}</span>`;
+
+    return `
+      <div class="task-row ${t.status}">
+        <span class="task-icon">${icon}</span>
+        <span class="task-name">${t.task}</span>
+        <span class="task-cost">${fmtCost(t.cost)}</span>
+        ${dur}
+        <div class="task-bar-wrap">
+          <div class="task-bar" style="width:${bar}%"></div>
+        </div>
+        ${dot}
+      </div>`;
+  }).join('');
+}
+
+// ── Breakdown ──────────────────────────────────────────────────
+const BREAKDOWN_COLORS = {
+  'moltbook-daily':   'var(--cyan)',
+  'mallorca-subagent':'var(--gold)',
+  'main':             'var(--green)',
+};
+
+function renderBreakdown(data) {
+  const list = document.getElementById('breakdown-list');
+  const dateEl = document.getElementById('breakdown-date');
+
+  let bd;
+  if (activeRange === 'week') {
+    bd = data.breakdown_week || [];
+    if (dateEl) dateEl.textContent = '7 Tage';
+  } else if (activeRange === 'month') {
+    bd = data.breakdown_month || [];
+    if (dateEl) dateEl.textContent = 'Monat';
+  } else {
+    bd = data.breakdown || [];
+    if (dateEl) dateEl.textContent = 'Heute';
+  }
+
+  if (bd.length === 0) {
+    list.innerHTML = `<div class="empty-state">Keine Daten für ${activeRange === 'today' ? 'heute' : activeRange === 'week' ? 'diese Woche' : 'diesen Monat'}</div>`;
+    return;
+  }
+
+  const maxCost = Math.max(...bd.map(b => b.cost), 0.001);
+
+  list.innerHTML = bd.map((b, i) => {
+    const pct   = (b.cost / maxCost) * 100;
+    const color = BREAKDOWN_COLORS[b.session] || `hsl(${i * 60 + 200}, 80%, 60%)`;
+    const lbl   = sessionLabel(b.session);
+
+    return `
+      <div class="breakdown-row">
+        <span class="breakdown-label">
+          <span class="session-pill ${sessionClass(b.session)}">${lbl}</span>
+        </span>
+        <div class="breakdown-bar-wrap">
+          <div class="breakdown-bar" style="width:${pct}%; background:${color}; box-shadow: 0 0 8px ${color}40"></div>
+        </div>
+        <span class="breakdown-cost">${fmtCost(b.cost)}</span>
+        <span class="breakdown-runs">${b.runs}×</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Weekly Chart ───────────────────────────────────────────────
+function renderWeeklyChart(data) {
+  const weekly = data.weekly || [];
+  weeklyData = weekly; // store for tooltip access
+  const labels = weekly.map(w => w.label);
+  const values = weekly.map(w => w.cost);
+
+  const maxVal = Math.max(...values, 0.01);
+  // Today is the last bar (index 6)
+  const colors = values.map((v, i) => {
+    if (v === 0)   return 'rgba(120,120,150,0.3)';
+    if (v < 3.0)   return i === 6 ? 'rgba(0,255,136,1.0)' : 'rgba(0,255,136,0.6)';
+    if (v < 10.0)  return i === 6 ? 'rgba(255,195,0,1.0)' : 'rgba(255,195,0,0.6)';
+    return i === 6 ? 'rgba(255,59,92,1.0)' : 'rgba(255,59,92,0.6)';
+  });
+
+  const bgColors = values.map((v, i) => {
+    const boost = i === 6 ? 1.5 : 1; // Today's bar slightly brighter
+    if (v === 0)   return 'rgba(120,120,150,0.04)';
+    if (v < 3.0)   return `rgba(0,255,136,${0.10 * boost})`;
+    if (v < 10.0)  return `rgba(255,195,0,${0.10 * boost})`;
+    return `rgba(255,59,92,${0.10 * boost})`;
+  });
+
+  if (!weeklyChart) {
+    const ctx = document.getElementById('weekly-chart').getContext('2d');
+    weeklyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'USD',
+          data: values,
+          backgroundColor: bgColors,
+          borderColor: colors,
+          borderWidth: 1.5,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(13,13,20,0.95)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: '#7a7a96',
+            bodyColor: '#e8e8f0',
+            bodyFont: { family: 'JetBrains Mono, monospace', size: 13 },
+            callbacks: {
+              title: (items) => {
+                const w = weeklyData[items[0].dataIndex];
+                return w ? w.date : items[0].label;
+              },
+              label: (ctx) => {
+                const v = ctx.raw;
+                if (v === 0) return ' kein Spend';
+                return ` ${fmtCost(v)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#7a7a96',
+              font: { family: 'JetBrains Mono, monospace', size: 11 }
+            },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#7a7a96',
+              font: { family: 'JetBrains Mono, monospace', size: 11 },
+              callback: v => `$${v < 1 ? v.toFixed(2) : Math.round(v)}`
+            },
+            border: { color: 'rgba(255,255,255,0.06)' }
+          }
+        }
+      }
+    });
+  } else {
+    weeklyChart.data.labels = labels;
+    weeklyChart.data.datasets[0].data = values;
+    weeklyChart.data.datasets[0].backgroundColor = bgColors;
+    weeklyChart.data.datasets[0].borderColor = colors;
+    weeklyChart.update('none');
+  }
+}
+
+// ── Recent Events ──────────────────────────────────────────────
+function renderEvents(data) {
+  const list   = document.getElementById('events-list');
+  const scrollTop = list.scrollTop; // preserve scroll position
+  const events = data.recent || [];
+  const shown  = showAllEvents ? events : events.slice(0, 8);
+
+  list.innerHTML = shown.map(e => {
+    const dot  = statusDot(e.status, e.cost, e.task);
+    const costColor = e.cost > 3 ? 'color:var(--red)' : e.cost > 1 ? 'color:var(--yellow)' : 'color:var(--green)';
+
+    const pill = `<span class="session-pill ${sessionClass(e.session)}">${sessionLabel(e.session)}</span>`;
+    return `
+      <div class="event-row">
+        <span class="event-time">${fmtTime(e.ts)}</span>
+        <span class="event-task">
+          ${pill} ${e.task}
+          ${e.anomaly ? '<span style="color:var(--red);font-size:10px"> ⚠</span>' : ''}
+        </span>
+        <span class="event-model">${modelBadge(e.model)}</span>
+        <span class="event-cost" style="${costColor}">${fmtCost(e.cost)}</span>
+        <span class="event-dur">${fmtDuration(e.duration_sec)}</span>
+        ${dot}
+      </div>`;
+  }).join('');
+  list.scrollTop = scrollTop; // restore scroll
+}
+
+function toggleAllEvents() {
+  showAllEvents = !showAllEvents;
+  if (state) renderEvents(state);
+}
+
+// ── Anomalies ──────────────────────────────────────────────────
+function renderAnomalies(data) {
+  const bar    = document.getElementById('anomaly-bar');
+  const txt    = document.getElementById('anomaly-text');
+  const footer = document.getElementById('footer-anomalies');
+  const count  = document.getElementById('footer-anomaly-count');
+
+  const anomalies = data.anomalies || [];
+  const n = anomalies.length;
+
+  if (n > 0) {
+    bar.classList.add('visible');
+    txt.textContent = `${n} Anomalie${n > 1 ? 'n' : ''}: ${anomalies.map(a => a.task).join(', ')}`;
+    footer.style.display = '';
+    count.textContent = n;
+  } else {
+    bar.classList.remove('visible');
+    footer.style.display = 'none';
+  }
+}
+
+// ── Footer ─────────────────────────────────────────────────────
+function renderFooter(data) {
+  const now = new Date();
+  const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  document.getElementById('footer-update').textContent = `Letztes Update: ${t}`;
+  document.getElementById('footer-count').textContent  = data.recent ? data.recent.length : 0;
+}
+
+// ── Master render ──────────────────────────────────────────────
+function render(data) {
+  state = data;
+  renderKPI(data);
+  renderTaxameterSection(data);
+  renderBreakdown(data);
+  renderWeeklyChart(data);
+  renderEvents(data);
+  renderAnomalies(data);
+  renderFooter(data);
+}
+
+// ── Data fetch ─────────────────────────────────────────────────
+async function fetchData() {
+  try {
+    const res  = await fetch('/api/data');
+    const data = await res.json();
+    render(data);
+  } catch (err) {
+    console.warn('[Cost Cockpit] fetch error:', err);
+  }
+}
+
+// ── SSE connection ─────────────────────────────────────────────
+let sseConnected = false;
+function connectSSE() {
+  try {
+    const es = new EventSource('/api/live');
+    es.onopen = () => { sseConnected = true; };
+    es.onmessage = (e) => {
+      sseConnected = true;
+      try { render(JSON.parse(e.data)); } catch(_) {}
+    };
+    es.onerror = () => {
+      sseConnected = false;
+      es.close();
+      // Retry SSE after 5s
+      setTimeout(connectSSE, 5000);
+    };
+  } catch(_) {
+    setTimeout(connectSSE, 5000);
+  }
+}
+
+// ── Filter tabs ────────────────────────────────────────────────
+document.getElementById('filter-tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-tab');
+  if (!btn) return;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeRange = btn.dataset.range;
+  if (state) {
+    renderKPI(state);
+    renderBreakdown(state);
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────
+fetchData();
+connectSSE();
+setInterval(fetchData, 3000);
+
+// Initial taxameter render
+renderTaxameter(0);
+</script>
+</body>
+</html>

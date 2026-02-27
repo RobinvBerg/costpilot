@@ -1,0 +1,7 @@
+# KIRA Cost Cockpit — Python Dependencies
+# All functionality uses Python standard library only.
+# No external packages required.
+#
+# Python >= 3.8 recommended
+# Standard library modules used: json, os, sys, time, threading,
+#   datetime, http.server, socketserver, collections, io

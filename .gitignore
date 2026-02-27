@@ -1,0 +1,32 @@
+# Data files (exclude from git — they can be huge)
+cost-events.jsonl
+cost-events-archive.jsonl
+auto-logger-state.json
+auto-logger-last-run.json
+auto-logger-errors.log
+auto-logger.pid
+
+# Backups
+backups/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Annotations (personal data)
+annotations.json
+
+# BUT include the example config and the actual config template
+!config.example.json
+config.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

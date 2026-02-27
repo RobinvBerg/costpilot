@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  kira-cockpit:
+    build: .
+    image: kira-cost-cockpit:1.2
+    container_name: kira-cockpit
+    ports:
+      - "8742:8742"
+    volumes:
+      - kira-data:/data
+      - ./config.json:/app/config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8742/api/ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  kira-data:
+    name: kira-cost-data

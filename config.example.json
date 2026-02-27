@@ -1,0 +1,88 @@
+{
+  "_comment": "CostPilot v2.0 — Example config with all available options",
+
+  "user": "Robin",
+  "project": "AI Operations",
+
+  "currency": "USD",
+  "currency_rate": 1.0,
+
+  "timezone": "Europe/Rome",
+
+  "alert_threshold_usd": 10.0,
+  "alert_levels": {
+    "warn": 5.0,
+    "critical": 10.0
+  },
+
+  "refresh_interval_sec": 2,
+
+  "theme": "dark",
+
+  "date_format": "relative",
+
+  "default_sort": "ts",
+  "default_filter": "ALL",
+
+  "show_sessions": true,
+  "compact_default": false,
+  "max_events_display": 50,
+  "hide_zero_cost": false,
+  "group_by_task": false,
+  "show_token_counts": true,
+  "cost_precision": 4,
+
+  "dashboard_title": "CostPilot",
+
+  "weekly_goal_usd": 0.0,
+
+  "model_aliases": {
+    "claude-sonnet-4-6": "Sonnet 4.6",
+    "claude-opus-4-6": "Opus 4.6",
+    "claude-haiku": "Haiku"
+  },
+
+  "session_label_overrides": {
+    "agent:main:main": "My Main Session"
+  },
+
+  "exclude_sessions": [],
+
+  "webhook_url": "",
+  "notify_on_threshold": false,
+
+  "retention_days": 90,
+
+  "_auth_comment": "Bearer token for API auth. Leave empty to auto-generate on first run. Set to false to disable.",
+  "token": "",
+
+  "_sessions_dir_comment": "Override sessions dir for --mode openclaw. Leave empty for default ~/.openclaw/agents/main/sessions/",
+  "sessions_dir": "",
+
+  "_mode_comment": "Default input mode: openclaw | csv | openai",
+  "mode": "openclaw",
+
+  "_openai_comment": "OpenAI API key for --mode openai (also reads OPENAI_API_KEY env var)",
+  "openai_api_key": "",
+
+  "openai_pricing": {
+    "gpt-4o": {"input": 2.50, "output": 10.0, "cache_read": 1.25},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60, "cache_read": 0.075}
+  },
+
+  "anthropic_pricing": {
+    "claude-sonnet-4-6": {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75},
+    "claude-opus-4-6": {"input": 15.0, "output": 75.0, "cache_read": 1.50, "cache_write": 18.75}
+  },
+
+  "basic_auth": {
+    "username": "",
+    "password": ""
+  },
+
+  "categories": [
+    {"keyword": "moltbook", "label": "Moltbook", "color": "cyan"},
+    {"keyword": "mallorca", "label": "Mallorca", "color": "yellow"},
+    {"keyword": "main",     "label": "Main",     "color": "blue"}
+  ]
+}
