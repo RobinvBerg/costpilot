@@ -1752,6 +1752,51 @@ class Handler(BaseHTTPRequestHandler):
         qs   = parse_qs(urlparse(self.path).query)
         if not self._check_token_auth(path, qs):
             return
+
+        # ── Bulk rename all events sharing the same task name ─────────────
+        m2 = re.match(r"^/api/tasks/rename$", path)
+        if m2:
+            try:
+                length   = int(self.headers.get("Content-Length", 0))
+                body     = self.rfile.read(length)
+                data     = json.loads(body)
+                old_name = data.get("old", "").strip()
+                new_name = data.get("new", "").strip()
+            except Exception:
+                self._json({"error": "Invalid body"}, status=400)
+                return
+            if not old_name or not new_name:
+                self._json({"error": "old and new task names required"}, status=400)
+                return
+
+            with _events_write_lock:
+                if not os.path.exists(EVENTS_FILE):
+                    self._json({"error": "No events file"}, status=404)
+                    return
+                lines   = []
+                renamed = 0
+                with open(EVENTS_FILE) as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            ev = json.loads(line)
+                            if ev.get("task") == old_name:
+                                ev["task"] = new_name
+                                renamed += 1
+                            lines.append(ev)
+                        except json.JSONDecodeError:
+                            pass
+                with open(EVENTS_FILE, "w") as f:
+                    for ev in lines:
+                        f.write(json.dumps(ev) + "\n")
+
+            load_events(force=True)
+            self._json({"ok": True, "renamed": renamed})
+            return
+
+        # ── Single-event rename ───────────────────────────────────────────
         m    = re.match(r"^/api/events/([a-f0-9]+)/rename$", path)
         if not m:
             self._json({"error": "Not found"}, status=404)

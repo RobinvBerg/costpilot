@@ -140,7 +140,7 @@ body.light .model-split-wrap{border-top-color:rgba(0,0,0,0.08) !important}
 /* Inline rename input */
 body.light .inline-rename-input{background:#ffffff !important;border-color:rgba(0,119,170,0.4) !important;color:#1a1a2e !important}
 .rename-pencil{background:none;border:none;cursor:pointer;font-size:10px;opacity:0;transition:opacity 0.15s;padding:0 2px;margin-left:3px;color:var(--text-muted);vertical-align:middle;line-height:1;flex-shrink:0}
-.event-row:hover .rename-pencil,.peak-task-callout:hover .rename-pencil{opacity:0.55}
+.event-row:hover .rename-pencil,.peak-task-callout:hover .rename-pencil,.breakdown-row:hover .rename-pencil{opacity:0.55}
 .rename-pencil:hover{opacity:1!important;color:var(--cyan)}
 .inline-rename-input{font-family:var(--mono);font-size:12px;padding:2px 7px;background:var(--bg3);border:1px solid rgba(0,212,255,0.4);border-radius:3px;color:var(--text);outline:none;min-width:110px;max-width:260px;vertical-align:middle}
 body.large-font{font-size:16px}
@@ -355,7 +355,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .breakdown-row{display:grid;grid-template-columns:140px 1fr 80px 50px;align-items:center;gap:12px;cursor:pointer;border-radius:var(--radius-sm);padding:4px 6px;transition:background 0.15s}
 .breakdown-row:hover{background:var(--bg3)}
 .breakdown-row.active-filter{background:rgba(0,212,255,0.08);outline:1px solid rgba(0,212,255,0.2)}
-.breakdown-label{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.breakdown-label{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}
 .breakdown-bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;position:relative}
 .breakdown-bar{height:100%;border-radius:4px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0}
 .breakdown-cost{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);text-align:right}
@@ -2255,6 +2255,18 @@ const BREAKDOWN_COLORS = {
   'main':              'var(--green)',
 };
 
+async function renameBulk(evt, oldName) {
+  evt.stopPropagation();
+  const newName = prompt('Rename "' + oldName + '" to:', oldName);
+  if (!newName || newName === oldName) return;
+  await fetch('/api/tasks/rename', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({old: oldName, new: newName})
+  });
+  fetchData();
+}
+
 function renderBreakdown(data) {
   // ── Section A: Model split ─────────────────────────────────
   const modelList = document.getElementById('model-breakdown-list');
@@ -2319,6 +2331,7 @@ function renderBreakdown(data) {
         <div class="breakdown-row ${active}" onclick="handleCategoryClick('${b.session}')">
           <span class="breakdown-label">
             <span class="session-pill ${sessionClass(b.session)}">${lbl}</span>
+            <button class="rename-pencil" onclick="renameBulk(event,'${b.session.replace(/'/g,"\\'")}')" title="Rename session">✏</button>
           </span>
           <div class="breakdown-bar-wrap">
             <div class="breakdown-bar" style="width:0%;background:${color}" data-target="${pct}"></div>
