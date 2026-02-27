@@ -605,8 +605,48 @@ def _build_state_inner():
     _gt_daily_values = [v.get("cost_usd", 0) for v in _gt_daily_early.values() if v.get("cost_usd", 0) > 0]
     gt_avg_daily_real = (sum(_gt_daily_values) / len(_gt_daily_values)) if _gt_daily_values else None
 
-    # Running tasks
-    running      = [e for e in events if e.get("status") == "running"]
+    # Running tasks — detect via JSONL mtime (modified < 2min = active session)
+    running = [e for e in events if e.get("status") == "running"]
+    _ACTIVE_WINDOW = 120  # seconds
+    try:
+        import glob as _glob
+        _sessions_dir = os.path.join(os.path.expanduser("~"), ".openclaw", "agents", "main", "sessions")
+        _spawn_labels = _load_spawn_labels()
+        # Build session cost totals for today
+        _session_today_cost = defaultdict(float)
+        for e in today_events:
+            _session_today_cost[e.get("session", "")] += e.get("cost_usd", 0)
+        # Build session → task label map from today's events
+        _session_task = {}
+        for e in today_events:
+            s = e.get("session", "")
+            if s and s not in _session_task:
+                _session_task[s] = e.get("task", f"Session {s[:8]}")
+        # Check each JSONL for recent mtime
+        _active_uuids = set(e.get("session", "") for e in running)
+        for _jf in _glob.glob(os.path.join(_sessions_dir, "*.jsonl")):
+            try:
+                _mtime = os.path.getmtime(_jf)
+                if now - _mtime < _ACTIVE_WINDOW:
+                    _uuid = os.path.basename(_jf).replace(".jsonl", "")
+                    if _uuid not in _active_uuids:
+                        _lbl = (_spawn_labels.get(_uuid)
+                                or _session_task.get(_uuid)
+                                or f"Session {_uuid[:8]}")
+                        running.append({
+                            "status":    "running",
+                            "session":   _uuid,
+                            "task":      _lbl,
+                            "cost_usd":  _session_today_cost.get(_uuid, 0),
+                            "ts":        _mtime,
+                            "model":     "",
+                            "source":    "mtime",
+                        })
+                        _active_uuids.add(_uuid)
+            except OSError:
+                pass
+    except Exception:
+        pass
     running_cost = sum(e.get("cost_usd", 0) for e in running)
 
     completed_today = [e for e in today_events if e.get("status") == "completed"]
