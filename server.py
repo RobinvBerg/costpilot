@@ -2299,15 +2299,24 @@ class Handler(BaseHTTPRequestHandler):
     def _autologger_health(self):
         age_sec  = None
         last_run = None
-        if os.path.exists(STATE_FILE):
+        # Try LAST_RUN_FILE first (written by auto_logger.py on each run)
+        for check_file in (LAST_RUN_FILE, STATE_FILE):
+            if not os.path.exists(check_file):
+                continue
             try:
-                with open(STATE_FILE) as f:
-                    state = json.load(f)
-                ts_vals = [v.get("ts", 0) for v in state.values() if isinstance(v, dict)]
-                if ts_vals:
-                    last_ts  = max(ts_vals)
+                with open(check_file) as f:
+                    data = json.load(f)
+                if check_file == LAST_RUN_FILE:
+                    # Format: {"ts": 1234567890, "datetime": "...", ...}
+                    last_ts = data.get("ts")
+                else:
+                    # Format: {"uuid": timestamp_float, ...} — fall back to mtime
+                    last_ts = os.path.getmtime(check_file)
+                if last_ts:
+                    last_ts  = float(last_ts)
                     last_run = datetime.fromtimestamp(last_ts).strftime("%Y-%m-%d %H:%M:%S")
-                    age_sec  = int(time.time()) - last_ts
+                    age_sec  = int(time.time()) - int(last_ts)
+                    break
             except Exception:
                 pass
         self._json({"last_run": last_run, "age_sec": age_sec})
