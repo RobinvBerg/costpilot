@@ -660,6 +660,25 @@ def _build_state_inner():
         pass
     running_cost = sum(e.get("cost_usd", 0) for e in running)
 
+    # ── Split running into KIRA background burn vs active tasks ────────────────
+    # running_kira: always present if KIRA has activity today (not mtime-gated)
+    kira_events_today = [e for e in today_events if e.get("task") == "KIRA"]
+    if kira_events_today:
+        kira_cost = sum(e.get("cost_usd", 0) for e in kira_events_today)
+        kira_first_ts = min(e.get("ts", now) for e in kira_events_today)
+        kira_elapsed = max(now - kira_first_ts, 60)
+        running_kira = [{
+            "task":         "KIRA",
+            "cost_usd":     round(kira_cost * float(cfg.get("currency_rate", 1.0) or 1.0), 6),
+            "duration_sec": round(kira_elapsed),
+            "status":       "running",
+            "source":       "daily",
+        }]
+    else:
+        running_kira = []
+    # running_tasks: active sub-agents/crons (mtime < 120s), exclude KIRA main session
+    running_tasks = [e for e in running if e.get("task") != "KIRA"]
+
     completed_today = [e for e in today_events if e.get("status") == "completed"]
     avg_task_cost   = (sum(e.get("cost_usd", 0) for e in completed_today) / len(completed_today)
                        if completed_today else 0)
@@ -1168,6 +1187,8 @@ def _build_state_inner():
             "data_volume_warning": data_volume_warning,
         },
         "running":          running,
+        "running_kira":     running_kira,
+        "running_tasks":    running_tasks,
         "breakdown":        breakdown,
         "breakdown_week":   breakdown_week,
         "breakdown_month":  breakdown_month,

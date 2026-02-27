@@ -122,10 +122,11 @@ body.light .gt-kpi-lbl{color:rgba(120,40,0,0.65) !important}
 body.light .gt-kpi-sub{color:rgba(30,30,60,0.45) !important}
 body.light .gt-subtext{color:rgba(120,40,0,0.6) !important;border-top-color:rgba(180,40,40,0.15) !important}
 body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
-/* Taxameter running state */
-body.light .taxameter-section.has-running{background:linear-gradient(135deg,#ffffff,rgba(204,30,60,0.04)) !important}
-/* Ring SVG */
-body.light .taxameter-ring-bg{stroke:#dde0e8}
+/* Taxameter dual card light mode */
+body.light .taxameter-card{background:#ffffff !important}
+body.light .taxameter-kira{background:linear-gradient(135deg,#ffffff,rgba(0,170,204,0.03)) !important}
+body.light .taxameter-tasks-card.has-running{background:linear-gradient(135deg,#ffffff,rgba(204,30,60,0.04)) !important}
+body.light .taxameter-card+.taxameter-card{border-left-color:rgba(0,0,0,0.08) !important}
 /* Heatmap cells empty state */
 body.light .heatmap-cell[style*="rgba(120,120,150,0.08)"]{background:rgba(0,0,0,0.04) !important}
 /* Model badges adjust in light */
@@ -290,37 +291,38 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .peak-task-callout.visible{display:flex}
 .peak-task-callout .peak-name{color:var(--text);font-weight:600}
 .peak-task-callout .peak-cost{color:var(--gold);font-weight:700;margin-left:auto}
-/* ── Taxameter ── */
-.taxameter-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px 32px;display:flex;align-items:center;gap:32px;position:relative;overflow:hidden;transition:padding 0.3s,min-height 0.3s}
-.taxameter-section.has-running{border-color:rgba(255,59,92,0.3);background:linear-gradient(135deg,var(--bg2),rgba(255,59,92,0.04))}
-/* Idle: collapse to slim bar */
-.taxameter-section.idle{padding:12px 20px;flex-wrap:nowrap}
-.taxameter-section.idle .taxameter-ring-wrap,
-.taxameter-section.idle .taxameter-main,
-.taxameter-section.idle .taxameter-tasks{display:none!important}
-.taxameter-idle-compact{display:none;align-items:center;gap:16px;font-family:var(--mono);font-size:12px;color:var(--text-dim);width:100%}
-.taxameter-section.idle .taxameter-idle-compact{display:flex}
-.taxi-idle-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0}
-.taxi-idle-label{color:var(--text-muted);font-size:10px;letter-spacing:0.1em;text-transform:uppercase}
-.taxi-idle-task{color:var(--text);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.taxi-idle-cost{color:var(--green);font-weight:700}
-.taxi-idle-age{color:var(--text-muted);font-size:10px}
+/* ── Taxameter — dual layout ── */
+.taxameter-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden}
 .taxameter-section::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0;transition:opacity 0.3s}
 .taxameter-section.has-running::before{opacity:1}
-.taxameter-main{display:flex;flex-direction:column;align-items:flex-start;min-width:280px}
-.taxameter-label{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px}
-.taxameter-counter{font-family:var(--mono);font-size:64px;font-weight:700;letter-spacing:-0.02em;line-height:1;color:var(--text-muted);transition:color 0.3s,text-shadow 0.3s;display:flex;align-items:flex-start}
-.taxameter-counter .dollar{font-size:32px;margin-top:8px}
-.taxameter-counter .decimals{font-size:36px;margin-top:12px;opacity:0.8}
+.taxameter-section.has-running{border-color:rgba(255,59,92,0.3)}
+/* Each card panel */
+.taxameter-card{padding:20px 24px;display:flex;flex-direction:column;gap:4px;position:relative;transition:background 0.3s}
+.taxameter-card+.taxameter-card{border-left:1px solid var(--border)}
+/* KIRA card — always shows if KIRA has activity today */
+.taxameter-kira{background:linear-gradient(135deg,var(--bg2),rgba(0,212,255,0.03))}
+.taxameter-kira.kira-active{background:linear-gradient(135deg,var(--bg2),rgba(0,212,255,0.06))}
+/* Tasks card — lights up when tasks running */
+.taxameter-tasks-card{background:var(--bg2)}
+.taxameter-tasks-card.has-running{background:linear-gradient(135deg,var(--bg2),rgba(255,59,92,0.05))}
+/* Compact idle row for tasks card */
+.taxameter-idle-compact{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:4px}
+.taxi-idle-dot{width:6px;height:6px;border-radius:50%;background:var(--text-muted);flex-shrink:0}
+.taxameter-label{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px}
+.taxameter-counter{font-family:var(--mono);font-size:54px;font-weight:700;letter-spacing:-0.02em;line-height:1;color:var(--text-muted);transition:color 0.3s,text-shadow 0.3s;display:flex;align-items:flex-start}
+.taxameter-counter .dollar{font-size:26px;margin-top:7px}
+.taxameter-counter .decimals{font-size:30px;margin-top:10px;opacity:0.8}
 .taxameter-counter.is-running{color:var(--red);text-shadow:0 0 40px rgba(255,59,92,0.4);animation:taxameter-tick 0.1s steps(1) infinite}
+.taxameter-counter.is-kira{color:var(--cyan,#00d4ff);text-shadow:0 0 30px rgba(0,212,255,0.25)}
 @keyframes taxameter-tick{0%,100%{opacity:1}50%{opacity:0.92}}
-.taxameter-idle{font-size:11px;color:var(--text-muted);font-family:var(--mono);margin-top:8px;letter-spacing:0.05em}
-/* Progress ring around taxameter */
-.taxameter-ring-wrap{position:relative;width:140px;height:140px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.taxameter-ring{position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg)}
+.taxameter-idle{font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-top:4px;letter-spacing:0.05em}
+.taxameter-tasks-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+/* Keep ring classes for compat (unused in dual layout but referenced in CSS overrides) */
+.taxameter-ring-wrap{display:none!important}
 .taxameter-ring-bg{fill:none;stroke:var(--bg3);stroke-width:6}
-.taxameter-ring-fill{fill:none;stroke:var(--green);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s ease,stroke 0.3s}
-.taxameter-tasks{flex:1;display:flex;flex-direction:column;gap:8px}
+.taxameter-ring-fill{fill:none;stroke:var(--green);stroke-width:6;stroke-linecap:round}
+/* Legacy alias — tasks block inside right card */
+.taxameter-tasks{flex:1;display:flex;flex-direction:column;gap:6px}
 /* ── Task rows ── */
 .task-row{display:grid;grid-template-columns:24px 1fr auto auto 80px 28px;align-items:center;gap:12px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.3s}
 .task-row.running{border-color:rgba(255,59,92,0.2);background:linear-gradient(135deg,var(--bg3),rgba(255,59,92,0.04))}
@@ -604,8 +606,8 @@ body.light .model-bar-wrap{background:#dde0e8}
   .taxameter-counter{font-size:48px}
   .taxameter-counter .dollar{font-size:24px;margin-top:6px}
   .taxameter-counter .decimals{font-size:28px;margin-top:8px}
-  .taxameter-section{flex-direction:column;gap:16px;padding:16px}
-  .taxameter-main{min-width:auto;width:100%}
+  .taxameter-section{grid-template-columns:1fr}
+  .taxameter-card+.taxameter-card{border-left:none;border-top:1px solid var(--border)}
   .two-col{grid-template-columns:1fr}
   .header{flex-wrap:wrap;gap:10px}
   .header-right{flex-wrap:wrap;gap:6px}
@@ -869,40 +871,40 @@ body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
     </div>
   </div>
 
-  <!-- ── Live Taxameter + Tasks ── -->
-  <div class="taxameter-section idle" id="taxameter-section" role="status" aria-live="polite" aria-label="Live running cost taxameter">
-    <!-- Progress ring -->
-    <div class="taxameter-ring-wrap" id="taxi-ring-wrap" style="display:none">
-      <svg class="taxameter-ring" viewBox="0 0 120 120">
-        <circle class="taxameter-ring-bg" cx="60" cy="60" r="52"/>
-        <circle class="taxameter-ring-fill" id="taxi-ring-fill" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
-      </svg>
-      <div style="font-family:var(--mono);font-size:11px;text-align:center;color:var(--text-dim)">
-        <div id="taxi-ring-pct" style="font-size:16px;font-weight:700;color:var(--text)">0%</div>
-        <div style="font-size:9px;letter-spacing:0.1em">VS Ø 30D</div>
-      </div>
-    </div>
-    <!-- Compact idle row (visible when no task running) -->
-    <div class="taxameter-idle-compact">
-      <div class="taxi-idle-dot"></div>
-      <span class="taxi-idle-label">Idle</span>
-      <span class="taxi-idle-task" id="taxi-idle-task">–</span>
-      <span class="taxi-idle-cost" id="taxi-idle-cost"></span>
-      <span class="taxi-idle-age" id="taxi-idle-age"></span>
-    </div>
-    <div class="taxameter-main">
-      <div class="taxameter-label">Taxameter · Live Running Cost</div>
-      <div class="taxameter-counter" id="taxameter-counter">
+  <!-- ── Dual Taxameter: KIRA burn (left) + Active Tasks (right) ── -->
+  <div class="taxameter-section" id="taxameter-section" role="status" aria-live="polite" aria-label="Live cost taxameter">
+
+    <!-- Left: KIRA daily burn — always visible when KIRA has activity today -->
+    <div class="taxameter-card taxameter-kira" id="taxi-kira-card">
+      <div class="taxameter-label">KIRA · Today</div>
+      <div class="taxameter-counter" id="taxi-kira-counter">
         <span class="dollar">$</span>
-        <span id="taxi-int">0</span>
-        <span class="decimals" id="taxi-dec">.000000</span>
+        <span id="taxi-kira-int">0</span>
+        <span class="decimals" id="taxi-kira-dec">.000000</span>
       </div>
-      <div class="taxameter-idle" id="taxameter-idle">● Idle — no active task</div>
-      <div class="taxameter-idle" id="taxameter-rate" style="display:none;color:var(--red)"></div>
-      <!-- Cost velocity -->
-      <div id="cost-velocity" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:4px"></div>
+      <div class="taxameter-idle" id="taxi-kira-rate">● No KIRA activity today</div>
+      <!-- Cost velocity (hidden by default) -->
+      <div id="cost-velocity" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:2px"></div>
     </div>
-    <div class="taxameter-tasks" id="taxameter-tasks"></div>
+
+    <!-- Right: Active sub-agents / crons (mtime < 120s) -->
+    <div class="taxameter-card taxameter-tasks-card" id="taxi-tasks-card">
+      <div class="taxameter-label">Active Tasks · Live</div>
+      <div class="taxameter-counter" id="taxi-tasks-counter">
+        <span class="dollar">$</span>
+        <span id="taxi-tasks-int">0</span>
+        <span class="decimals" id="taxi-tasks-dec">.000000</span>
+      </div>
+      <div class="taxameter-idle" id="taxi-tasks-rate" style="display:none;color:var(--red)"></div>
+      <!-- Idle state (shown when no tasks) -->
+      <div class="taxameter-idle-compact" id="taxi-tasks-idle-row">
+        <div class="taxi-idle-dot"></div>
+        <span>No active tasks</span>
+      </div>
+      <!-- Running task list -->
+      <div class="taxameter-tasks" id="taxameter-tasks"></div>
+    </div>
+
   </div>
 
   <!-- ── Two-column: Breakdown + Weekly Chart ── -->
@@ -1407,10 +1409,17 @@ let dateFrom       = null;
 let dateTo         = null;
 let quickChip      = null;
 
-// Taxameter
+// Taxameter — dual state
+// KIRA: slow background drip (today's accumulated cost)
+let taxKiraValue   = 0;   // shown value (smoothly approaches kiraTarget)
+let taxKiraTarget  = 0;   // real cost from server
+let taxKiraRate    = 0;   // $/s burn rate (today_cost / elapsed_sec)
+let taxKiraActive  = false;
+// Tasks: fast live counter for active sub-agents
 let taxRunning  = false;
 let taxValue    = 0;
 let taxRate     = 0;
+let taxTasksActive = false;
 let taxLastTick = Date.now();
 
 // Last update time for "Updated X seconds ago"
@@ -1517,40 +1526,61 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// ── Taxameter ──────────────────────────────────────────────────
-/** Animate taxameter counter at 80ms intervals */
+// ── Dual Taxameter ─────────────────────────────────────────────
+
+/** Render a counter into int/dec elements */
+function _renderCounter(intId, decId, val) {
+  const safe    = (val !== undefined && val !== null && !isNaN(val)) ? Number(val) : 0;
+  const intPart = Math.floor(safe);
+  const decPart = (safe - intPart).toFixed(6).slice(1);
+  const intEl = document.getElementById(intId);
+  const decEl = document.getElementById(decId);
+  if (intEl) intEl.textContent = intPart;
+  if (decEl) decEl.textContent = decPart;
+}
+
+/** Animate both taxameter counters at 80ms intervals */
 function updateTaxameter() {
   const now = Date.now();
   const dt  = (now - taxLastTick) / 1000;
   taxLastTick = now;
 
+  // ── KIRA counter: drip toward target using slow burn rate ──
+  if (taxKiraActive && taxKiraRate > 0) {
+    // Slowly drip: advance by burn rate but cap at target + small overshoot tolerance
+    taxKiraValue += taxKiraRate * dt;
+    // Clamp: don't run too far ahead of reality (max 5% overshoot)
+    if (taxKiraValue > taxKiraTarget * 1.05) taxKiraValue = taxKiraTarget;
+  } else if (taxKiraActive) {
+    // No rate, just display static target
+    taxKiraValue = taxKiraTarget;
+  }
+  const kiraCounterEl = document.getElementById('taxi-kira-counter');
+  if (kiraCounterEl) kiraCounterEl.classList.toggle('is-kira', taxKiraActive);
+  _renderCounter('taxi-kira-int', 'taxi-kira-dec', taxKiraValue);
+
+  // ── Tasks counter: fast live increment ──
   if (taxRunning && taxRate > 0) {
     taxValue += taxRate * dt;
     const runValEl = document.getElementById('kpi-running-val');
     if (runValEl) runValEl.textContent = fmtCost(taxValue, 6);
-    const rateEl = document.getElementById('taxameter-rate');
+    const rateEl = document.getElementById('taxi-tasks-rate');
     if (rateEl) {
       rateEl.textContent = `▶ ≈${fmtCost(taxRate)}/s  ·  ≈${fmtCost(taxRate * 60)}/min`;
       rateEl.style.display = '';
     }
   } else {
-    const rateEl = document.getElementById('taxameter-rate');
+    const rateEl = document.getElementById('taxi-tasks-rate');
     if (rateEl) rateEl.style.display = 'none';
   }
-  renderTaxameterCounter(taxValue);
+  const tasksCounterEl = document.getElementById('taxi-tasks-counter');
+  if (tasksCounterEl) tasksCounterEl.classList.toggle('is-running', taxRunning && taxRate > 0);
+  _renderCounter('taxi-tasks-int', 'taxi-tasks-dec', taxValue);
 }
 
+/** Legacy alias kept for any remaining calls */
 function renderTaxameterCounter(val) {
-  const el = document.getElementById('taxameter-counter');
-  if (!el) return;
-  el.classList.toggle('is-running', taxRunning && taxRate > 0);
-  const safe    = (val !== undefined && val !== null && !isNaN(val)) ? Number(val) : 0;
-  const intPart = Math.floor(safe);
-  const decPart = (safe - intPart).toFixed(6).slice(1);
-  const intEl = document.getElementById('taxi-int');
-  const decEl = document.getElementById('taxi-dec');
-  if (intEl) intEl.textContent = intPart;
-  if (decEl) decEl.textContent = decPart;
+  _renderCounter('taxi-tasks-int', 'taxi-tasks-dec', val);
 }
 
 setInterval(updateTaxameter, 80);
@@ -2129,87 +2159,105 @@ function renderKPI(data) {
   if (insightsRow) insightsRow.style.display = 'flex';
 }
 
-// ── Taxameter section ──────────────────────────────────────────
+// ── Dual Taxameter section ─────────────────────────────────────
 function renderTaxameterSection(data) {
-  const running = data.running || [];
+  const runningKira  = data.running_kira  || [];
+  const runningTasks = data.running_tasks || data.running || [];
   const section = document.getElementById('taxameter-section');
-  const tasksEl = document.getElementById('taxameter-tasks');
-  const idleEl  = document.getElementById('taxameter-idle');
-  if (!section || !tasksEl) return;
+  if (!section) return;
 
-  const isRunning = running.length > 0;
-  section.classList.toggle('has-running', isRunning);
-  section.classList.toggle('idle', !isRunning);
+  const hasAnyRunning = runningTasks.length > 0;
+  section.classList.toggle('has-running', hasAnyRunning);
 
-  if (isRunning) {
+  // ── Left panel: KIRA background burn ──────────────────────────
+  const kiraCard = document.getElementById('taxi-kira-card');
+  const kiraRateEl = document.getElementById('taxi-kira-rate');
+
+  if (runningKira.length > 0) {
+    const k = runningKira[0];
+    const kiraCost    = k.cost_usd || 0;
+    const kiraElapsed = Math.max(k.duration_sec || 3600, 60); // seconds
+
+    taxKiraActive = true;
+    taxKiraTarget = kiraCost;
+    // Burn rate: cost / elapsed_sec (very slow drip)
+    taxKiraRate = kiraCost / kiraElapsed;
+    // Initialize displayed value to target (no wild catch-up)
+    if (taxKiraValue === 0) taxKiraValue = kiraCost;
+
+    const kiraPerHr = kiraElapsed > 0 ? (kiraCost / (kiraElapsed / 3600)) : 0;
+    if (kiraRateEl) {
+      kiraRateEl.style.display = '';
+      kiraRateEl.style.color   = 'var(--cyan, #00d4ff)';
+      kiraRateEl.textContent   = `≈ ${fmtCost(kiraPerHr)}/hr burn rate`;
+    }
+    if (kiraCard) kiraCard.classList.add('kira-active');
+  } else {
+    taxKiraActive = false;
+    taxKiraRate   = 0;
+    taxKiraValue  = 0;
+    if (kiraRateEl) {
+      kiraRateEl.style.display = '';
+      kiraRateEl.style.color   = '';
+      kiraRateEl.textContent   = '● No KIRA activity today';
+    }
+    if (kiraCard) kiraCard.classList.remove('kira-active');
+  }
+
+  // ── Right panel: Active tasks (sub-agents, crons) ─────────────
+  const tasksCard   = document.getElementById('taxi-tasks-card');
+  const tasksEl     = document.getElementById('taxameter-tasks');
+  const tasksIdleEl = document.getElementById('taxi-tasks-idle-row');
+  if (!tasksEl) return;
+
+  if (tasksCard) tasksCard.classList.toggle('has-running', hasAnyRunning);
+
+  if (hasAnyRunning) {
     taxRunning = true;
-    if ((data.kpi?.running_cost || 0) > taxValue) taxValue = data.kpi.running_cost;
+    taxTasksActive = true;
+    const runCost = runningTasks.reduce((s, t) => s + (t.cost_usd || t.cost || 0), 0);
+    if (runCost > taxValue) taxValue = runCost;
+
     let totalRate = 0;
-    for (const t of running) {
+    for (const t of runningTasks) {
       const elapsed  = Math.max(t.duration_sec || 30, 1);
       const taskCost = t.cost_usd || t.cost || 0;
       totalRate += elapsed > 5 ? taskCost / elapsed : 0.00045;
     }
     taxRate = totalRate;
-    if (idleEl) idleEl.style.display = 'none';
+    if (tasksIdleEl) tasksIdleEl.style.display = 'none';
   } else {
-    taxRunning = false;
-    taxRate    = 0;
-    taxValue   = 0;
-    if (idleEl) idleEl.style.display = 'none';
-    // Populate compact idle row
-    const lastTask = (data.recent || []).find(t => t.status === 'completed');
-    const taskEl = document.getElementById('taxi-idle-task');
-    const costEl = document.getElementById('taxi-idle-cost');
-    const ageEl  = document.getElementById('taxi-idle-age');
-    if (lastTask) {
-      if (taskEl) taskEl.textContent = lastTask.task || '–';
-      if (costEl) costEl.textContent = fmtCost(lastTask.cost || 0);
-      if (ageEl)  ageEl.textContent  = fmtAge(lastTask.age_sec);
-    } else {
-      if (taskEl) taskEl.textContent = 'kein Task heute';
-      if (costEl) costEl.textContent = '';
-      if (ageEl)  ageEl.textContent  = '';
-    }
-    renderTaxameterCounter(0);
+    taxRunning     = false;
+    taxTasksActive = false;
+    taxRate        = 0;
+    taxValue       = 0;
+    if (tasksIdleEl) tasksIdleEl.style.display = 'flex';
   }
 
-  const normalizedRunning = running.map(t => ({
+  // Render running task rows in right card
+  const normalizedRunning = runningTasks.map(t => ({
     ...t,
     cost: t.cost !== undefined ? t.cost : (t.cost_usd || 0),
     task: t.task || 'Unknown',
   }));
-  const recent = data.recent || [];
-  const toShow = running.length > 0
-    ? [...normalizedRunning, ...recent.filter(t => t.status !== 'running').slice(0, 4)]
-    : recent.slice(0, 6);
 
-  if (toShow.length === 0) {
-    tasksEl.innerHTML = `
-      <div class="empty-state">No recent tasks found</div>
-      <div class="onboarding-hint">
-        Log your first task:
-        <code>python3 auto_logger.py</code>
-      </div>`;
+  if (normalizedRunning.length === 0) {
+    tasksEl.innerHTML = '';
     return;
   }
 
-  const maxCost = Math.max(...toShow.map(t => (t.cost || t.cost_usd || 0)), 0.001);
-  tasksEl.innerHTML = toShow.map(t => {
-    const cost    = t.cost || t.cost_usd || 0;
-    const icon    = t.status === 'running' ? '🔄' : t.status === 'failed' ? '❌' : '✅';
-    const bar     = Math.min(100, (cost / maxCost) * 100);
-    const dot     = statusDot(t.status, cost, t.task);
-    const dur     = t.status === 'running'
-      ? `<span style="color:var(--red);font-family:var(--mono);font-size:11px">LIVE</span>`
-      : `<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${fmtDuration(t.duration_sec)}</span>`;
+  const maxCost = Math.max(...normalizedRunning.map(t => (t.cost || t.cost_usd || 0)), 0.001);
+  tasksEl.innerHTML = normalizedRunning.map(t => {
+    const cost     = t.cost || t.cost_usd || 0;
+    const bar      = Math.min(100, (cost / maxCost) * 100);
+    const dot      = statusDot(t.status, cost, t.task);
     const catClass = taskCategoryClass(t);
     return `
-      <div class="task-row ${t.status} ${catClass}">
-        <span class="task-icon">${icon}</span>
+      <div class="task-row running ${catClass}">
+        <span class="task-icon">🔄</span>
         <span class="task-name" title="${(t.task||'').replace(/"/g,"'")}">${t.task}</span>
         <span class="task-cost">${fmtCost(cost)}</span>
-        ${dur}
+        <span style="color:var(--red);font-family:var(--mono);font-size:11px">LIVE</span>
         <div class="task-bar-wrap"><div class="task-bar" style="width:${bar}%"></div></div>
         ${dot}
       </div>`;
