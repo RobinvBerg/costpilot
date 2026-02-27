@@ -247,6 +247,49 @@ _events_lock      = threading.Lock()
 _malformed_count  = 0
 
 
+_SESSION_LABEL_CACHE = {}  # session_id → enriched label
+
+def _enrich_session_labels(events):
+    """
+    Post-process events whose task is "Session XXXXXXXX" (anonymous UUID prefix).
+    Replace with a meaningful label like "Sonnet · Feb 27 04:00" derived from
+    the model and timestamp of the first event in that session group.
+    Mutates events in-place; uses a module-level cache to avoid re-computing.
+    """
+    import re as _re
+    _SESSION_RE = _re.compile(r'^Session [0-9a-f]{8}$')
+    _MODEL_SHORT = {"sonnet": "Sonnet", "opus": "Opus", "haiku": "Haiku"}
+    _MONTHS = ["Jan","Feb","Mar","Apr","May","Jun",
+               "Jul","Aug","Sep","Oct","Nov","Dec"]
+
+    # Group events by their current anonymous task label
+    anon_groups = {}   # label → list of event indices
+    for i, ev in enumerate(events):
+        task = ev.get("task", "")
+        if _SESSION_RE.match(task):
+            anon_groups.setdefault(task, []).append(i)
+
+    for label, indices in anon_groups.items():
+        if label in _SESSION_LABEL_CACHE:
+            new_label = _SESSION_LABEL_CACHE[label]
+        else:
+            # Use the first (oldest) event in this group to derive label
+            first_ev = min((events[i] for i in indices), key=lambda e: e.get("ts", 0))
+            model_raw  = (first_ev.get("model") or "").lower()
+            model_short = next((v for k, v in _MODEL_SHORT.items() if k in model_raw), "AI")
+            ts = first_ev.get("ts", 0)
+            if ts:
+                dt = datetime.fromtimestamp(ts)
+                new_label = f"{model_short} · {_MONTHS[dt.month-1]} {dt.day} {dt.hour:02d}:00"
+            else:
+                new_label = label  # keep as-is if no timestamp
+            _SESSION_LABEL_CACHE[label] = new_label
+
+        if new_label != label:
+            for i in indices:
+                events[i]["task"] = new_label
+
+
 def load_events(force=False):
     """Load events from file with mtime caching and malformed-line resilience."""
     global _events_cache, _events_mtime, _events_demo_mode, _malformed_count
@@ -296,6 +339,10 @@ def load_events(force=False):
                             events.append(json.loads(line))
                         except json.JSONDecodeError:
                             pass
+
+        # Enrich anonymous "Session XXXXXXXX" labels with model+timestamp
+        if not demo_mode:
+            _enrich_session_labels(events)
 
         _events_cache     = events
         _events_mtime     = mtime
@@ -786,7 +833,7 @@ def _build_state_inner():
     peak_task = None
     if completed_today:
         pt = max(completed_today, key=lambda e: e.get("cost_usd", 0))
-        peak_task = {"task": pt.get("task", "Unknown"), "cost": round(pt.get("cost_usd", 0) * rate, precision)}
+        peak_task = {"task": pt.get("task", "Unknown"), "cost": round(pt.get("cost_usd", 0) * rate, precision), "id": pt.get("id", event_id(pt))}
 
     # All-time peak
     all_events = [e for e in events if e.get("status") == "completed"]

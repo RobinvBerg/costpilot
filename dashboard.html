@@ -45,17 +45,104 @@ body.light{
   background:#f5f5f7 !important;
   color:#1a1a2e !important;
 }
+/* ── Light mode element overrides ── */
 body.light .header{background:#ffffff !important;border-color:rgba(0,0,0,0.08) !important}
 body.light .card,body.light .kpi-card{background:#ffffff !important;border-color:rgba(0,0,0,0.08) !important}
 body.light .taxameter-section{background:#ffffff !important}
 body.light .task-row{background:#e8e8ed !important;border-color:rgba(0,0,0,0.08) !important}
-body.light .event-row{background:#ffffff !important;border-color:rgba(0,0,0,0.06) !important}
+body.light .event-row{background:#ffffff !important;border-bottom:1px solid rgba(0,0,0,0.05) !important}
+body.light .event-row:hover{background:#f0f0f4 !important}
+body.light .event-row.expanded{background:#f0f0f4 !important}
+body.light .event-row.selected{background:rgba(0,119,170,0.08) !important;outline-color:rgba(0,119,170,0.25) !important}
+body.light .event-row.pinned{background:rgba(179,134,0,0.06) !important}
+body.light .event-detail{background:#e8e8ed !important;border-top-color:rgba(0,0,0,0.07) !important}
 body.light .filter-tabs{background:#e8e8ed !important}
 body.light .filter-tab:hover{background:#d0d0d8 !important}
+body.light .filter-tab.active{background:linear-gradient(135deg,rgba(0,119,170,0.12),rgba(0,122,61,0.10)) !important;color:#0077aa !important;border-color:rgba(0,119,170,0.3) !important}
 body.light .icon-btn{background:#e8e8ed !important;border-color:rgba(0,0,0,0.12) !important;color:#5a5a72 !important}
-body.light .breakdown-row{background:#f0f0f4 !important}
+body.light .icon-btn:hover{color:#0077aa !important;border-color:rgba(0,119,170,0.4) !important}
+body.light .breakdown-row{background:transparent !important}
+body.light .breakdown-row:hover{background:#f0f0f4 !important}
+body.light .breakdown-bar-wrap{background:#dde0e8 !important}
 body.light .modal-content{background:#ffffff !important;border-color:rgba(0,0,0,0.12) !important}
 body.light .modal-input{background:#f5f5f7 !important;border-color:rgba(0,0,0,0.15) !important;color:#1a1a2e !important}
+/* Scrollbar */
+body.light ::-webkit-scrollbar-track{background:#f5f5f7}
+body.light ::-webkit-scrollbar-thumb{background:#c8c8d0;border-radius:3px}
+/* Grid pattern — lighter dots */
+body.light::before{background-image:linear-gradient(rgba(0,0,0,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.025) 1px,transparent 1px) !important}
+/* Events table header */
+body.light .events-header{background:#f5f5f7 !important;color:#9a9aaa !important}
+/* Search / filters */
+body.light .events-search{background:#ffffff !important;border-color:rgba(0,0,0,0.12) !important;color:#1a1a2e !important}
+body.light .events-search::placeholder{color:#c0c0cc}
+body.light .model-filter-select{background:#ffffff !important;border-color:rgba(0,0,0,0.12) !important;color:#5a5a72 !important}
+body.light .date-input{background:#ffffff !important;border-color:rgba(0,0,0,0.12) !important;color:#1a1a2e !important}
+body.light .quick-chip{border-color:rgba(0,0,0,0.12) !important}
+body.light .quick-chip.active{color:#0077aa !important;border-color:rgba(0,119,170,0.4) !important;background:rgba(0,119,170,0.08) !important}
+body.light .filter-clear-btn{color:#0077aa !important;border-color:rgba(0,119,170,0.3) !important;background:rgba(0,119,170,0.06) !important}
+body.light .active-filter-label{color:#0077aa !important;background:rgba(0,119,170,0.08) !important}
+body.light .compact-toggle{border-color:rgba(0,0,0,0.12) !important}
+/* Pagination */
+body.light .page-btn{background:#f0f0f4 !important;border-color:rgba(0,0,0,0.12) !important;color:#5a5a72 !important}
+body.light .page-btn:hover{color:#0077aa !important;border-color:rgba(0,119,170,0.4) !important}
+body.light .page-btn.active{color:#0077aa !important;border-color:rgba(0,119,170,0.4) !important;background:rgba(0,119,170,0.08) !important}
+/* Export */
+body.light .export-btn{background:#e8e8ed !important;border-color:rgba(0,0,0,0.12) !important;color:#5a5a72 !important}
+body.light .export-btn:hover{color:#0077aa !important;border-color:rgba(0,119,170,0.4) !important;background:rgba(0,119,170,0.06) !important}
+/* Mini widgets */
+body.light .mini-widget{background:#f0f0f4 !important;border-color:rgba(0,0,0,0.08) !important}
+/* Alltime + goal bars */
+body.light .alltime-row{background:#f0f0f4 !important;border-color:rgba(0,0,0,0.08) !important}
+body.light .goal-bar{background:#f0f0f4 !important}
+body.light .goal-bar-track{background:#dde0e8 !important}
+/* Task progress bars */
+body.light .task-bar-wrap{background:#dde0e8 !important}
+/* Context menu */
+body.light .ctx-menu{background:#ffffff !important;border-color:rgba(0,0,0,0.12) !important;box-shadow:0 8px 32px rgba(0,0,0,0.12) !important}
+body.light .ctx-item:hover{background:#f0f0f4 !important;color:#1a1a2e !important}
+/* Peak task callout */
+body.light .peak-task-callout{background:linear-gradient(135deg,rgba(179,134,0,0.07),transparent) !important;border-color:rgba(179,134,0,0.2) !important}
+/* Hall of fame */
+body.light .hall-of-fame{background:linear-gradient(135deg,rgba(179,134,0,0.07),transparent) !important;border-color:rgba(179,134,0,0.12) !important}
+/* Connection banners */
+body.light .conn-lost-banner{background:rgba(179,134,0,0.08) !important;border-color:rgba(179,134,0,0.35) !important}
+body.light .alert-banner{background:rgba(204,30,60,0.06) !important;border-color:rgba(204,30,60,0.3) !important}
+body.light .anomaly-bar{background:rgba(204,30,60,0.06) !important;border-color:rgba(204,30,60,0.25) !important}
+body.light .demo-badge{background:rgba(179,134,0,0.10) !important;border-color:rgba(179,134,0,0.3) !important}
+/* GT banner — override hardcoded dark colors */
+body.light .gt-banner{background:linear-gradient(135deg,rgba(180,40,40,0.06),rgba(180,60,20,0.03)) !important;border-color:rgba(180,40,40,0.2) !important;border-left-color:rgba(180,40,40,0.5) !important}
+body.light .gt-banner::before{opacity:0.3 !important}
+body.light .gt-banner-title{color:#aa2020 !important}
+body.light .gt-kpi-val{color:#b33300 !important}
+body.light .gt-kpi-val.red{color:#cc1e3c !important}
+body.light .gt-kpi-val.green{color:#007a3d !important}
+body.light .gt-kpi-val.warn{color:#b38600 !important}
+body.light .gt-kpi-lbl{color:rgba(120,40,0,0.65) !important}
+body.light .gt-kpi-sub{color:rgba(30,30,60,0.45) !important}
+body.light .gt-subtext{color:rgba(120,40,0,0.6) !important;border-top-color:rgba(180,40,40,0.15) !important}
+body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
+/* Taxameter running state */
+body.light .taxameter-section.has-running{background:linear-gradient(135deg,#ffffff,rgba(204,30,60,0.04)) !important}
+/* Ring SVG */
+body.light .taxameter-ring-bg{stroke:#dde0e8}
+/* Heatmap cells empty state */
+body.light .heatmap-cell[style*="rgba(120,120,150,0.08)"]{background:rgba(0,0,0,0.04) !important}
+/* Model badges adjust in light */
+body.light .model-badge.sonnet{background:rgba(0,119,170,0.10) !important;border-color:rgba(0,119,170,0.2) !important}
+body.light .model-badge.haiku{background:rgba(0,122,61,0.10) !important;border-color:rgba(0,122,61,0.2) !important}
+body.light .model-badge.opus{background:rgba(179,134,0,0.10) !important;border-color:rgba(179,134,0,0.2) !important}
+/* Progress bars */
+body.light .progress-bar{background:#dde0e8 !important}
+/* Heatmap wrap borders */
+body.light .heatmap-wrap{border-top-color:rgba(0,0,0,0.08) !important}
+body.light .model-split-wrap{border-top-color:rgba(0,0,0,0.08) !important}
+/* Inline rename input */
+body.light .inline-rename-input{background:#ffffff !important;border-color:rgba(0,119,170,0.4) !important;color:#1a1a2e !important}
+.rename-pencil{background:none;border:none;cursor:pointer;font-size:10px;opacity:0;transition:opacity 0.15s;padding:0 2px;margin-left:3px;color:var(--text-muted);vertical-align:middle;line-height:1;flex-shrink:0}
+.event-row:hover .rename-pencil,.peak-task-callout:hover .rename-pencil{opacity:0.55}
+.rename-pencil:hover{opacity:1!important;color:var(--cyan)}
+.inline-rename-input{font-family:var(--mono);font-size:12px;padding:2px 7px;background:var(--bg3);border:1px solid rgba(0,212,255,0.4);border-radius:3px;color:var(--text);outline:none;min-width:110px;max-width:260px;vertical-align:middle}
 body.large-font{font-size:16px}
 /* ── Large Font Mode: scale all major text elements ── */
 body.large-font .kpi-value{font-size:42px}
@@ -531,27 +618,55 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* ── Number roll ── */
 .roll{display:inline-block;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
 
-/* ── Ground Truth Banner ── */
-.gt-banner{background:linear-gradient(135deg,rgba(255,59,92,0.06),rgba(255,120,50,0.04));border:1px solid rgba(255,80,60,0.35);border-left:4px solid #ff3b5c;border-radius:var(--radius);padding:16px 20px;position:relative;overflow:hidden}
-.gt-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,#ff3b5c,#ff8c00,transparent);opacity:0.7}
-.gt-banner-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#ff3b5c;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-.gt-banner-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,59,92,0.4),transparent)}
+/* ── Baseline Ticker Strip (replaces old gt-banner) ── */
+.gt-ticker-bar{display:flex;align-items:center;gap:10px;padding:9px 16px;background:linear-gradient(135deg,rgba(255,59,92,0.05),rgba(255,120,50,0.025));border:1px solid rgba(255,80,60,0.22);border-left:3px solid rgba(255,59,92,0.65);border-radius:var(--radius);font-family:var(--mono);font-size:11px;color:var(--text-dim);flex-wrap:wrap;gap:8px}
+.gt-ticker-icon{font-size:13px;flex-shrink:0}
+.gt-ticker-label{font-weight:700;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,80,60,0.8);flex-shrink:0}
+.gt-ticker-baseline{font-size:13px;font-weight:700;color:rgba(255,120,50,0.9);flex-shrink:0}
+.gt-ticker-arrow{color:var(--text-muted);font-weight:700;flex-shrink:0}
+.gt-ticker-today-lbl{color:var(--text-dim);flex-shrink:0}
+.gt-ticker-today{font-size:13px;font-weight:700;color:var(--green);flex-shrink:0}
+.gt-ticker-sep{color:var(--border2);flex-shrink:0}
+.gt-ticker-savings{font-weight:700;flex-shrink:0}
+.gt-ticker-pipe{color:rgba(255,255,255,0.12);padding:0 2px;flex-shrink:0}
+.gt-ticker-meta{font-size:10px;color:var(--text-muted);flex-shrink:0}
+.gt-ticker-spacer{flex:1;min-width:0}
+.gt-ticker-btn{padding:3px 9px;background:transparent;border:1px solid rgba(255,80,60,0.25);border-radius:var(--radius-sm);color:rgba(255,80,60,0.55);font-family:var(--mono);font-size:9px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;flex-shrink:0;white-space:nowrap}
+.gt-ticker-btn:hover{color:rgba(255,80,60,0.85);border-color:rgba(255,80,60,0.45)}
+.gt-ticker-btn.open{color:var(--cyan);border-color:rgba(0,212,255,0.35)}
+/* GT collapsible details panel */
+.gt-details-panel{padding:14px 20px;background:linear-gradient(135deg,rgba(255,59,92,0.04),rgba(255,120,50,0.02));border:1px solid rgba(255,80,60,0.18);border-top:none;border-radius:0 0 var(--radius) var(--radius);position:relative;overflow:hidden}
+.gt-details-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(255,59,92,0.3),rgba(255,120,50,0.2),transparent);opacity:0.6}
 .gt-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:900px){.gt-kpi-row{grid-template-columns:repeat(3,1fr)}}
 .gt-kpi{display:flex;flex-direction:column;gap:3px}
-.gt-kpi-val{font-family:var(--mono);font-size:22px;font-weight:700;color:#ff8c00;letter-spacing:-0.02em}
+.gt-kpi-val{font-family:var(--mono);font-size:20px;font-weight:700;color:#ff8c00;letter-spacing:-0.02em}
 .gt-kpi-val.red{color:#ff3b5c}
 .gt-kpi-val.green{color:#00ff88}
 .gt-kpi-val.warn{color:#ffc300;animation:gt-blink 1.5s infinite}
 .gt-kpi-lbl{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,140,0,0.6)}
 .gt-kpi-sub{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.3)}
-.gt-subtext{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,59,92,0.2);font-family:var(--mono);font-size:10px;color:rgba(255,140,0,0.55);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.gt-badge{background:rgba(255,59,92,0.15);border:1px solid rgba(255,59,92,0.4);padding:2px 8px;border-radius:3px;color:#ff3b5c;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase}
-.gt-accuracy{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;border:1px solid}
-.gt-accuracy.ok{color:#00ff88;border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.08)}
-.gt-accuracy.warn{color:#ffc300;border-color:rgba(255,195,0,0.4);background:rgba(255,195,0,0.08)}
-.gt-accuracy.bad{color:#ff3b5c;border-color:rgba(255,59,92,0.4);background:rgba(255,59,92,0.08);animation:gt-blink 1.5s infinite}
+.gt-subtext{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,59,92,0.15);font-family:var(--mono);font-size:10px;color:rgba(255,140,0,0.5);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gt-badge{background:rgba(255,59,92,0.12);border:1px solid rgba(255,59,92,0.35);padding:2px 7px;border-radius:3px;color:#ff3b5c;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
 @keyframes gt-blink{0%,100%{opacity:1}50%{opacity:0.6}}
+/* Light mode overrides for ticker */
+body.light .gt-ticker-bar{background:linear-gradient(135deg,rgba(160,30,30,0.05),rgba(160,60,20,0.02));border-color:rgba(160,30,30,0.16);border-left-color:rgba(160,30,30,0.45)}
+body.light .gt-ticker-label{color:rgba(160,30,30,0.75)}
+body.light .gt-ticker-baseline{color:rgba(160,60,20,0.85)}
+body.light .gt-ticker-pipe{color:rgba(0,0,0,0.15)}
+body.light .gt-ticker-btn{border-color:rgba(160,30,30,0.2);color:rgba(160,30,30,0.5)}
+body.light .gt-ticker-btn:hover{color:rgba(160,30,30,0.8);border-color:rgba(160,30,30,0.4)}
+body.light .gt-ticker-btn.open{color:var(--cyan);border-color:rgba(0,119,170,0.35)}
+body.light .gt-details-panel{background:rgba(160,30,30,0.03);border-color:rgba(160,30,30,0.14)}
+body.light .gt-details-panel::before{opacity:0.25}
+body.light .gt-kpi-val{color:#b33300}
+body.light .gt-kpi-val.red{color:#cc1e3c}
+body.light .gt-kpi-val.green{color:#007a3d}
+body.light .gt-kpi-val.warn{color:#b38600}
+body.light .gt-kpi-lbl{color:rgba(120,40,0,0.6)}
+body.light .gt-kpi-sub{color:rgba(30,30,60,0.4)}
+body.light .gt-subtext{color:rgba(120,40,0,0.55);border-top-color:rgba(160,30,30,0.12)}
+body.light #gt-tracked-note{color:rgba(30,30,60,0.5) !important}
 </style>
 </head>
 <body>
@@ -658,23 +773,42 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </div>
 
-  <!-- ── ANTHROPIC GROUND TRUTH BANNER ── -->
-  <div class="gt-banner" id="gt-banner" style="display:none">
-    <div class="gt-banner-title">
-      <span>⬛</span> Anthropic Ground Truth
-      <span class="gt-badge" id="gt-source-badge">BILLING DATA</span>
-      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.25)" id="gt-generated-at"></span>
+  <!-- ── Baseline · Pre-Optimization Ticker ── -->
+  <div id="gt-ticker" style="display:none">
+    <div class="gt-ticker-bar">
+      <span class="gt-ticker-icon">📉</span>
+      <span class="gt-ticker-label">Baseline vor Optimierung:</span>
+      <span id="gt-ticker-baseline" class="gt-ticker-baseline">–/Tag</span>
+      <span class="gt-ticker-arrow">→</span>
+      <span class="gt-ticker-today-lbl">Heute:</span>
+      <span id="gt-ticker-today" class="gt-ticker-today">$0.00/Tag</span>
+      <span class="gt-ticker-sep">·</span>
+      <span id="gt-ticker-savings" class="gt-ticker-savings" style="color:var(--text-muted)">–</span>
+      <span class="gt-ticker-pipe">│</span>
+      <span id="gt-ticker-week" class="gt-ticker-meta">7d: –</span>
+      <span class="gt-ticker-sep">·</span>
+      <span id="gt-ticker-acc" class="gt-ticker-meta">Acc: –</span>
+      <div class="gt-ticker-spacer"></div>
+      <button class="gt-ticker-btn" id="gt-details-toggle" onclick="toggleGtDetails()">Details ▾</button>
+    </div>
+  </div>
+  <!-- GT Details Panel (collapsible) -->
+  <div id="gt-details-panel" class="gt-details-panel" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,80,60,0.7)">Anthropic Billing Data</span>
+      <span class="gt-badge" id="gt-source-badge">GROUND TRUTH</span>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text-muted)" id="gt-generated-at"></span>
     </div>
     <div class="gt-kpi-row">
       <div class="gt-kpi">
         <div class="gt-kpi-val red" id="gt-total-cost">–</div>
-        <div class="gt-kpi-lbl">3-Day Total</div>
-        <div class="gt-kpi-sub">Feb 21–23</div>
+        <div class="gt-kpi-lbl">All-Time Total</div>
+        <div class="gt-kpi-sub">Anthropic billing</div>
       </div>
       <div class="gt-kpi">
         <div class="gt-kpi-val" id="gt-avg-daily">–</div>
-        <div class="gt-kpi-lbl">Ø / Day (Real)</div>
-        <div class="gt-kpi-sub">pre cache-fix</div>
+        <div class="gt-kpi-lbl">Ø / Tag (Real)</div>
+        <div class="gt-kpi-sub">alle Tage</div>
       </div>
       <div class="gt-kpi">
         <div class="gt-kpi-val" id="gt-week-cost">–</div>
@@ -683,8 +817,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
       <div class="gt-kpi">
         <div class="gt-kpi-val green" id="gt-cache-read">–</div>
-        <div class="gt-kpi-lbl">Cache Reads (3d)</div>
-        <div class="gt-kpi-sub">GT tokens</div>
+        <div class="gt-kpi-lbl">Cache Reads</div>
+        <div class="gt-kpi-sub">GT tokens total</div>
       </div>
       <div class="gt-kpi">
         <div class="gt-kpi-val" id="gt-accuracy" style="font-size:18px">–</div>
@@ -693,11 +827,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
     <div class="gt-subtext">
-      <span>🔴 Ø Tageskosten vor Cache-Fix: <strong style="color:#ff8c00">$145</strong></span>
-      <span style="color:rgba(255,255,255,0.2)">|</span>
-      <span>✅ Heute (nach Fix erwartet): <strong style="color:#00ff88">~$30</strong></span>
-      <span style="color:rgba(255,255,255,0.2)">|</span>
-      <span id="gt-tracked-note" style="color:rgba(255,255,255,0.3)">Tracked: $16.01 of $436.70</span>
+      <span id="gt-tracked-note">Tracked: – of –</span>
     </div>
   </div>
 
@@ -705,6 +835,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   <div class="peak-task-callout" id="peak-task-callout">
     <span>🏆 Most expensive today:</span>
     <span class="peak-name" id="peak-task-name">–</span>
+    <button class="rename-pencil" id="peak-rename-btn" onclick="startPeakRename(event)" title="Rename">✏</button>
     <span class="peak-cost" id="peak-task-cost">$0.00</span>
   </div>
 
@@ -1301,8 +1432,8 @@ function toggleTheme() {
   const isLight = document.body.classList.contains('light');
   if (themeBtn) themeBtn.textContent = isLight ? '☀️' : '🌙';
   localStorage.setItem('costpilot-theme', isLight ? 'light' : 'dark');
-  // R99: re-render charts on theme toggle
-  if (state) { renderWeeklyChart(state); renderDonut(state); }
+  // Re-render all charts on theme toggle
+  if (state) { renderWeeklyChart(state); renderDonut(state); renderHeatmap(state); }
 }
 
 /** R164: High contrast mode */
@@ -1865,6 +1996,8 @@ function renderKPI(data) {
   const peakCallout = document.getElementById('peak-task-callout');
   if (data.peak_task && peakCallout) {
     peakCallout.classList.add('visible');
+    peakCallout.dataset.eventId   = data.peak_task.id   || '';
+    peakCallout.dataset.eventTask = data.peak_task.task || '';
     setEl('peak-task-name', data.peak_task.task);
     setEl('peak-task-cost', fmtCost(data.peak_task.cost));
   } else if (peakCallout) {
@@ -2183,6 +2316,10 @@ function renderDonut(data) {
   const labels = allLabels.filter((_,i) => allVals[i] > 0);
   const colors = allColors.filter((_,i) => allVals[i] > 0);
 
+  const isLightDonut   = document.body.classList.contains('light');
+  const donutTooltipBg = isLightDonut ? 'rgba(250,250,252,0.97)' : 'rgba(13,13,20,0.95)';
+  const donutBodyColor = isLightDonut ? '#1a1a2e' : '#e8e8f0';
+
   if (!donutChart) {
     const ctx = document.getElementById('donut-chart')?.getContext('2d');
     if (!ctx) return;
@@ -2195,7 +2332,8 @@ function renderDonut(data) {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(13,13,20,0.95)',
+            backgroundColor: donutTooltipBg,
+            bodyColor: donutBodyColor,
             bodyFont: { family: 'JetBrains Mono, monospace', size: 12 },
             callbacks: {
               label: ctx => ` ${ctx.label}: ${fmtCost(ctx.raw)} (${Math.round(ctx.raw/total*100)}%)`
@@ -2219,6 +2357,8 @@ function renderDonut(data) {
     donutChart.data.labels = labels;
     donutChart.data.datasets[0].data = values;
     donutChart.data.datasets[0].backgroundColor = colors;
+    donutChart.options.plugins.tooltip.backgroundColor = donutTooltipBg;
+    donutChart.options.plugins.tooltip.bodyColor       = donutBodyColor;
     donutChart.update('none');
   }
 
@@ -2329,15 +2469,24 @@ function renderWeeklyChart(data) {
     });
   }
 
+  const isLightTheme = document.body.classList.contains('light');
+  const chartGridColor   = isLightTheme ? 'rgba(0,0,0,0.06)'  : 'rgba(255,255,255,0.04)';
+  const chartTickColor   = isLightTheme ? '#5a5a72'            : '#7a7a96';
+  const chartBorderColor = isLightTheme ? 'rgba(0,0,0,0.08)'  : 'rgba(255,255,255,0.06)';
+  const chartTooltipBg   = isLightTheme ? 'rgba(250,250,252,0.97)' : 'rgba(13,13,20,0.95)';
+  const chartTooltipBdr  = isLightTheme ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.1)';
+  const chartTitleColor  = isLightTheme ? '#5a5a72'  : '#7a7a96';
+  const chartBodyColor   = isLightTheme ? '#1a1a2e'  : '#e8e8f0';
+
   const chartOptions = {
     responsive: true, maintainAspectRatio: false,
     animation: { duration: 600, easing: 'easeOutQuart' },
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(13,13,20,0.95)',
-        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
-        titleColor: '#7a7a96', bodyColor: '#e8e8f0',
+        backgroundColor: chartTooltipBg,
+        borderColor: chartTooltipBdr, borderWidth: 1,
+        titleColor: chartTitleColor, bodyColor: chartBodyColor,
         bodyFont: { family: 'JetBrains Mono, monospace', size: 13 },
         callbacks: {
           title: items => { const w = weeklyData[items[0].dataIndex]; return w ? w.date : items[0].label; },
@@ -2350,14 +2499,14 @@ function renderWeeklyChart(data) {
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#7a7a96', font: { family: 'JetBrains Mono, monospace', size: 11 } },
-        border: { color: 'rgba(255,255,255,0.06)' }
+        grid: { color: chartGridColor },
+        ticks: { color: chartTickColor, font: { family: 'JetBrains Mono, monospace', size: 11 } },
+        border: { color: chartBorderColor }
       },
       y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        ticks: { color: '#7a7a96', font: { family: 'JetBrains Mono, monospace', size: 11 }, callback: v => `$${v < 1 ? v.toFixed(2) : Math.round(v)}` },
-        border: { color: 'rgba(255,255,255,0.06)' }
+        grid: { color: chartGridColor },
+        ticks: { color: chartTickColor, font: { family: 'JetBrains Mono, monospace', size: 11 }, callback: v => `$${v < 1 ? v.toFixed(2) : Math.round(v)}` },
+        border: { color: chartBorderColor }
       }
     },
     onClick: (evt, elements) => {
@@ -2383,6 +2532,17 @@ function renderWeeklyChart(data) {
   } else {
     weeklyChart.data.labels   = labels;
     weeklyChart.data.datasets = datasets;
+    // Apply current theme colors to existing chart instance
+    weeklyChart.options.plugins.tooltip.backgroundColor = chartTooltipBg;
+    weeklyChart.options.plugins.tooltip.borderColor     = chartTooltipBdr;
+    weeklyChart.options.plugins.tooltip.titleColor      = chartTitleColor;
+    weeklyChart.options.plugins.tooltip.bodyColor       = chartBodyColor;
+    weeklyChart.options.scales.x.grid.color    = chartGridColor;
+    weeklyChart.options.scales.x.ticks.color   = chartTickColor;
+    weeklyChart.options.scales.x.border.color  = chartBorderColor;
+    weeklyChart.options.scales.y.grid.color    = chartGridColor;
+    weeklyChart.options.scales.y.ticks.color   = chartTickColor;
+    weeklyChart.options.scales.y.border.color  = chartBorderColor;
     weeklyChart.update('none');
   }
 }
@@ -2400,12 +2560,13 @@ function renderHeatmap(data) {
   const totalHourly = hourly.reduce((a, b) => a + b, 0);
   if (totalEl) totalEl.textContent = totalHourly > 0 ? `All-time: ${fmtCost(totalHourly)}` : '';
 
+  const isLightHeatmap = document.body.classList.contains('light');
   function heatColor(v, max) {
-    if (v === 0) return 'rgba(120,120,150,0.08)';
+    if (v === 0) return isLightHeatmap ? 'rgba(0,0,0,0.05)' : 'rgba(120,120,150,0.08)';
     const pct = v / max;
-    if (pct < 0.33) return `rgba(0,212,255,${0.15 + pct * 0.85})`;
-    if (pct < 0.66) return `rgba(255,195,0,${0.3 + pct * 0.7})`;
-    return `rgba(255,59,92,${0.4 + pct * 0.6})`;
+    if (pct < 0.33) return `rgba(0,${isLightHeatmap?'100':'212'},${isLightHeatmap?'160':'255'},${0.25 + pct * 0.75})`;
+    if (pct < 0.66) return `rgba(${isLightHeatmap?'200':'255'},${isLightHeatmap?'130':'195'},0,${0.4 + pct * 0.6})`;
+    return `rgba(${isLightHeatmap?'204':'255'},${isLightHeatmap?'30':'59'},${isLightHeatmap?'60':'92'},${0.5 + pct * 0.5})`;
   }
 
   cellsEl.innerHTML = hourly.map((v, h) => {
@@ -2663,6 +2824,7 @@ function renderEvents(data) {
     const detailId   = `evdet-${idx}`;
     const maxLen     = 30;
     const taskDisp   = (e.task || '').length > maxLen ? e.task.slice(0, maxLen) + '…' : e.task;
+    const taskFull   = (e.task || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
     // R38: Recurring badge
     const recurBadge = e.is_recurring ? `<span class="recurring-badge">♻</span>` : '';
     // R40: Anomaly badge
@@ -2693,7 +2855,7 @@ function renderEvents(data) {
            title="">
         <span class="event-time" title="${new Date(e.ts*1000).toLocaleString()}">${timeDisp}</span>
         <span class="event-task" title="${(e.task||'').replace(/"/g,"'")}">
-          ${pill} ${taskDisp} ${eff}${recurBadge}${anomBadge}${tagChips}${annotBadge}
+          ${pill} <span class="event-task-name" id="task-name-${e.id}">${taskDisp}</span><button class="rename-pencil" onclick="startInlineRename(event,'${e.id}','${taskFull}')" title="Rename task (✏)">✏</button>${eff}${recurBadge}${anomBadge}${tagChips}${annotBadge}
         </span>
         <span class="event-model model-col">${modelBadge(e.model)}</span>
         <span class="event-cost" style="${costColor}" onclick="copyCost(event,'${fmtCost(e.cost)}')" title="Click to copy">${fmtCost(e.cost)}</span>
@@ -2799,7 +2961,7 @@ function pinEvent(id) {
   if (state) renderEvents(state);
 }
 
-// Rename event
+// Rename event (prompt-based — used from detail panel & context menu)
 async function renameEvent(id, currentName) {
   const newName = prompt('Rename task:', currentName);
   if (!newName || newName === currentName) return;
@@ -2813,6 +2975,78 @@ async function renameEvent(id, currentName) {
     if (data.ok) { fetchData(); showCopyFlash('✓ Renamed'); }
     else         { alert('Rename failed: ' + (data.error || 'unknown')); }
   } catch(e) { alert('Network error'); }
+}
+
+// Inline rename — triggered by pencil icon in event list row
+function startInlineRename(evt, id, currentName) {
+  evt.stopPropagation();
+  const nameSpan = document.getElementById('task-name-' + id);
+  if (!nameSpan || nameSpan.querySelector('input')) return;  // already editing
+  const pencilBtn = nameSpan.nextElementSibling;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentName;
+  input.className = 'inline-rename-input';
+  input.style.width = Math.max(120, Math.min(260, nameSpan.offsetWidth + 50)) + 'px';
+
+  nameSpan.style.display = 'none';
+  if (pencilBtn) pencilBtn.style.display = 'none';
+  nameSpan.parentNode.insertBefore(input, nameSpan);
+  input.focus();
+  input.select();
+
+  let committed = false;
+  const commit = async () => {
+    if (committed) return;
+    committed = true;
+    const newName = input.value.trim();
+    input.remove();
+    nameSpan.style.display = '';
+    if (pencilBtn) pencilBtn.style.display = '';
+    if (!newName || newName === currentName) return;
+    try {
+      const res = await fetch(`/api/events/${id}/rename`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: newName })
+      });
+      const data = await res.json();
+      if (data.ok) { fetchData(); showCopyFlash('✓ Renamed'); }
+      else { showCopyFlash('✗ Rename failed'); }
+    } catch(e) { showCopyFlash('✗ Network error'); }
+  };
+  const cancel = () => {
+    if (committed) return;
+    committed = true;
+    input.remove();
+    nameSpan.style.display = '';
+    if (pencilBtn) pencilBtn.style.display = '';
+  };
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    e.stopPropagation();
+  });
+  input.addEventListener('blur', commit);
+}
+
+// Inline rename for peak-task callout
+function startPeakRename(evt) {
+  evt.stopPropagation();
+  const callout  = document.getElementById('peak-task-callout');
+  const nameSpan = document.getElementById('peak-task-name');
+  const pencilBtn = document.getElementById('peak-rename-btn');
+  if (!callout || !nameSpan) return;
+  const id          = callout.dataset.eventId   || '';
+  const currentName = callout.dataset.eventTask || nameSpan.textContent;
+  if (!id) { renameEvent('', currentName); return; }
+  startInlineRename(evt, id, currentName);
+  // Fallback: if id not in DOM (no task-name-<id> span), use prompt
+  if (!document.getElementById('task-name-' + id)) {
+    renameEvent(id, currentName);
+  }
 }
 
 // R18: Compact view
@@ -2967,15 +3201,35 @@ function renderAnomalies(data) {
 // ── Master render ──────────────────────────────────────────────
 let renderThrottleTimer = null;
 
+/** Toggle GT details collapsible panel */
+function toggleGtDetails() {
+  const panel  = document.getElementById('gt-details-panel');
+  const btn    = document.getElementById('gt-details-toggle');
+  const ticker = document.getElementById('gt-ticker');
+  if (!panel || !btn) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? 'Details ▾' : 'Details ▴';
+  btn.classList.toggle('open', !isOpen);
+  // Connect ticker and panel visually when open
+  if (ticker) {
+    const bar = ticker.querySelector('.gt-ticker-bar');
+    if (bar) {
+      bar.style.borderRadius = isOpen ? 'var(--radius)' : 'var(--radius) var(--radius) 0 0';
+      bar.style.borderBottom = isOpen ? '' : 'none';
+    }
+  }
+}
+
 /** Main render function — called on every SSE update */
-// ── Ground Truth Banner ─────────────────────────────────────────
+// ── Baseline Ticker (Ground Truth) ─────────────────────────────
 function renderGroundTruth(data) {
   const gt     = data.ground_truth || {};
-  const banner = document.getElementById('gt-banner');
-  if (!banner) return;
+  const ticker = document.getElementById('gt-ticker');
+  if (!ticker) return;
 
-  if (!gt.available) { banner.style.display = 'none'; return; }
-  banner.style.display = '';
+  if (!gt.available) { ticker.style.display = 'none'; return; }
+  ticker.style.display = '';
 
   const fmtM = n => {
     if (!n) return '0';
@@ -2985,47 +3239,70 @@ function renderGroundTruth(data) {
     return n.toString();
   };
 
-  // Total cost
+  // ── Ticker strip ──
+  const baseline  = gt.avg_daily_real || 0;
+  const todayCost = parseFloat((data.kpi || {}).today_cost) || 0;
+  const savings   = (baseline > 0 && todayCost >= 0)
+    ? Math.max(0, (1 - todayCost / baseline) * 100) : null;
+
+  const tickerBaselineEl = document.getElementById('gt-ticker-baseline');
+  const tickerTodayEl    = document.getElementById('gt-ticker-today');
+  const tickerSavingsEl  = document.getElementById('gt-ticker-savings');
+  const tickerWeekEl     = document.getElementById('gt-ticker-week');
+  const tickerAccEl      = document.getElementById('gt-ticker-acc');
+
+  if (tickerBaselineEl) tickerBaselineEl.textContent = baseline > 0 ? fmtCost(baseline) + '/Tag' : '–';
+  if (tickerTodayEl)    tickerTodayEl.textContent    = fmtCost(todayCost) + '/Tag';
+  if (tickerSavingsEl) {
+    if (savings !== null) {
+      const pct = Math.round(savings);
+      tickerSavingsEl.textContent = pct + '% gespart via Prompt Caching';
+      tickerSavingsEl.style.color = pct > 60 ? 'var(--green)' : pct > 30 ? 'var(--yellow)' : 'var(--text-dim)';
+    } else {
+      tickerSavingsEl.textContent = 'Kein Vergleich verfügbar';
+      tickerSavingsEl.style.color = 'var(--text-muted)';
+    }
+  }
+  if (tickerWeekEl) tickerWeekEl.textContent = '7d: ' + fmtCost(gt.week_real_cost || 0);
+  const acc = gt.accuracy_today_pct;
+  if (tickerAccEl) {
+    if (acc !== null && acc !== undefined) {
+      tickerAccEl.textContent = 'Acc: ' + acc.toFixed(0) + '%';
+      tickerAccEl.style.color = acc > 50 ? 'var(--green)' : acc > 20 ? 'var(--yellow)' : 'var(--red)';
+    } else {
+      tickerAccEl.textContent = 'Acc: N/A';
+      tickerAccEl.style.color = 'var(--text-muted)';
+    }
+  }
+
+  // ── Details panel (populated when open) ──
   const totalEl = document.getElementById('gt-total-cost');
   if (totalEl) totalEl.textContent = fmtCost(gt.total_real_cost || 0);
 
-  // Avg daily
   const avgEl = document.getElementById('gt-avg-daily');
   if (avgEl) avgEl.textContent = fmtCost(gt.avg_daily_real || 0);
 
-  // Week cost
   const weekEl = document.getElementById('gt-week-cost');
   if (weekEl) weekEl.textContent = fmtCost(gt.week_real_cost || 0);
 
-  // Cache read tokens (GT)
   const cacheEl = document.getElementById('gt-cache-read');
   if (cacheEl) cacheEl.textContent = fmtM(gt.cache_read_total || 0);
 
-  // Tracker accuracy
   const accEl  = document.getElementById('gt-accuracy');
   const accSub = document.getElementById('gt-accuracy-sub');
-  const acc    = gt.accuracy_today_pct;
   if (accEl) {
     if (acc === null || acc === undefined) {
       accEl.textContent = 'N/A';
       accEl.className = 'gt-kpi-val';
-      if (accSub) accSub.textContent = 'no real data today';
+      if (accSub) accSub.textContent = 'no data today';
     } else {
       accEl.textContent = acc.toFixed(1) + '%';
-      if (acc < 10) {
-        accEl.className = 'gt-kpi-val warn';
-        if (accSub) accSub.textContent = '⚠ TRACKER UNRELIABLE';
-      } else if (acc < 50) {
-        accEl.className = 'gt-kpi-val';
-        if (accSub) accSub.textContent = 'partial tracking';
-      } else {
-        accEl.className = 'gt-kpi-val green';
-        if (accSub) accSub.textContent = 'tracking ok';
-      }
+      if (acc < 10)      { accEl.className = 'gt-kpi-val warn'; if (accSub) accSub.textContent = '⚠ UNRELIABLE'; }
+      else if (acc < 50) { accEl.className = 'gt-kpi-val';      if (accSub) accSub.textContent = 'partial tracking'; }
+      else               { accEl.className = 'gt-kpi-val green'; if (accSub) accSub.textContent = 'tracking ok'; }
     }
   }
 
-  // Tracked vs real note (all-time totals)
   const noteEl = document.getElementById('gt-tracked-note');
   if (noteEl) {
     const tracked = data.total_cost_tracked || 0;
@@ -3034,7 +3311,6 @@ function renderGroundTruth(data) {
     noteEl.textContent = `Tracked: ${fmtCost(tracked)} of ${fmtCost(real)} real (${pct}% erfasst)`;
   }
 
-  // Generated at
   const genEl = document.getElementById('gt-generated-at');
   if (genEl && gt.generated_at) {
     const d = new Date(gt.generated_at);

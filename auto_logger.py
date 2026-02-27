@@ -129,7 +129,55 @@ def session_label(session_key, cron_names=None, overrides=None):
             if uid in cron_id or cron_id in uid:
                 return name
 
-    return f"Session {session_key[:8]}"
+    return f"Session {session_key[:8]}"  # fallback — enriched in _run() if JSONL available
+
+
+# ── Smart label from JSONL content ───────────────────────────────────────────
+def smart_label_from_jsonl(fpath):
+    """
+    Read the first cost event from a session JSONL to infer a meaningful label.
+    Returns something like "Sonnet · Feb 27 04:00" or None if unable.
+    """
+    MODEL_SHORT = {
+        "sonnet": "Sonnet",
+        "opus":   "Opus",
+        "haiku":  "Haiku",
+    }
+    try:
+        with open(fpath) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line)
+                    msg = d.get("message", {})
+                    if not isinstance(msg, dict):
+                        continue
+                    usage = msg.get("usage", {})
+                    if not usage or not usage.get("cost", {}).get("total"):
+                        continue
+                    # Get model
+                    model_raw = (msg.get("model") or "").lower()
+                    model_short = "AI"
+                    for key, label in MODEL_SHORT.items():
+                        if key in model_raw:
+                            model_short = label
+                            break
+                    # Get timestamp
+                    ts_raw = d.get("timestamp")
+                    ts = parse_ts(ts_raw)
+                    if ts:
+                        dt = datetime.fromtimestamp(ts)
+                        months = ["Jan","Feb","Mar","Apr","May","Jun",
+                                  "Jul","Aug","Sep","Oct","Nov","Dec"]
+                        month_str = months[dt.month - 1]
+                        return f"{model_short} · {month_str} {dt.day} {dt.hour:02d}:00"
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    return None
 
 
 # ── Build session-key → UUID mapping from sessions.json ───────────────────────
@@ -489,6 +537,11 @@ def _run(args, run_start):
         # Get label via uuid → session_key → label
         sk  = uuid_to_key.get(uuid, uuid)
         lbl = session_label(sk, cron_names, overrides)
+        # If still an anonymous "Session XXXX", try to enrich from JSONL content
+        if lbl.startswith("Session "):
+            smart = smart_label_from_jsonl(fpath)
+            if smart:
+                lbl = smart
 
         last_ts = state.get(uuid)  # float or None
         events, new_max_ts = process_jsonl(fpath, last_ts, lbl, dry_run=args.dry_run)
