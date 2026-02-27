@@ -624,6 +624,13 @@ def _build_state_inner():
                 _session_task[s] = e.get("task", f"Session {s[:8]}")
         # Check each JSONL for recent mtime
         _active_uuids = set(e.get("session", "") for e in running)
+        # Build first-event-ts per session today (for velocity calc)
+        _session_first_ts = {}
+        for e in today_events:
+            s = e.get("session", "")
+            if s:
+                if s not in _session_first_ts or e.get("ts", 0) < _session_first_ts[s]:
+                    _session_first_ts[s] = e.get("ts", 0)
         for _jf in _glob.glob(os.path.join(_sessions_dir, "*.jsonl")):
             try:
                 _mtime = os.path.getmtime(_jf)
@@ -633,14 +640,18 @@ def _build_state_inner():
                         _lbl = (_spawn_labels.get(_uuid)
                                 or _session_task.get(_uuid)
                                 or f"Session {_uuid[:8]}")
+                        _sess_cost = _session_today_cost.get(_uuid, 0)
+                        _first_ts  = _session_first_ts.get(_uuid, today_start)
+                        _elapsed   = max(now - _first_ts, 60)  # at least 60s
                         running.append({
-                            "status":    "running",
-                            "session":   _uuid,
-                            "task":      _lbl,
-                            "cost_usd":  _session_today_cost.get(_uuid, 0),
-                            "ts":        _mtime,
-                            "model":     "",
-                            "source":    "mtime",
+                            "status":       "running",
+                            "session":      _uuid,
+                            "task":         _lbl,
+                            "cost_usd":     _sess_cost,
+                            "duration_sec": round(_elapsed),
+                            "ts":           _mtime,
+                            "model":        "",
+                            "source":       "mtime",
                         })
                         _active_uuids.add(_uuid)
             except OSError:
