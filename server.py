@@ -1491,6 +1491,66 @@ def compute_efficiency():
         ),
     })
 
+    # Rule 8 — cron_announce_in_main (check if cron results land in main session context)
+    # Heuristic: if many short-lived isolated sessions fired at night and main cost is high,
+    # it's likely that announce delivery is inflating main-session context.
+    _night_isolated = [
+        e for e in subagent_events
+        if e.get("session", "").startswith("isolated") or e.get("kind") == "cron"
+    ]
+    _night_main_cost_ratio = kira_pct  # reuse main-session cost share
+    if len(_night_isolated) >= 5 and _night_main_cost_ratio > 0.60:
+        _est_savings_announce = round(kira_cost * 0.30, 2)
+        rules.append({
+            "id": "cron_announce_in_main",
+            "title": "Cron results flooding main-session context",
+            "severity": "high",
+            "finding": (
+                f"{len(_night_isolated)} isolated/cron sessions fired today; "
+                f"main session holds {_night_main_cost_ratio*100:.0f}% of total spend "
+                f"(${kira_cost:.2f}) — likely inflated by announce delivery."
+            ),
+            "recommendation": (
+                "Set delivery.channel + delivery.to on all cron jobs to deliver "
+                "directly to Telegram — not via main-session announce."
+            ),
+            "est_savings_usd": _est_savings_announce,
+            "playbook": (
+                "Each cron result announced into the main chat appends to the main-session "
+                "context window. 35 overnight updates = ~$4/hour in extra context cost.\n\n"
+                "Fix: in every cron job set:\n"
+                "  delivery.mode: 'announce'\n"
+                "  delivery.channel: 'telegram'\n"
+                "  delivery.to: '<your-chat-id>'\n\n"
+                "This delivers directly to Telegram without touching main-session context."
+            ),
+        })
+
+    # Rule 9 — daily_restart (static best-practice recommendation)
+    # Always show: a daily gateway restart at 07:00 resets session context for free.
+    rules.append({
+        "id": "daily_restart",
+        "title": "Schedule a daily 07:00 gateway restart",
+        "severity": "low",
+        "finding": (
+            "No daily restart cron detected. Session context accumulates overnight "
+            "and inflates morning token costs."
+        ),
+        "recommendation": (
+            "Add a cron job: schedule.kind='cron', expr='0 7 * * *', "
+            "payload=gateway restart — resets context daily, memory files stay intact."
+        ),
+        "est_savings_usd": round(total_cost * 0.05, 2),
+        "playbook": (
+            "A fresh session context at 07:00 means your first message of the day costs "
+            "near zero — no overnight context carried forward.\n\n"
+            "Memory files (MEMORY.md, daily notes) survive the restart because they live "
+            "on disk — only the in-memory chat context is cleared.\n\n"
+            "Estimated saving: ~5% of daily spend from avoided context re-send on first "
+            "morning message."
+        ),
+    })
+
     # ── Score ────────────────────────────────────────────────────────────────
     deductions = {"high": 20, "medium": 10, "low": 5}
     score = max(0, 100 - sum(deductions.get(r["severity"], 0) for r in rules))

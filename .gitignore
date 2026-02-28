@@ -38,3 +38,9 @@ anthropic_ground_truth.json
 *.csv
 cost-events.jsonl
 cost-events.jsonl.*
+
+# Old versioned files — exclude from git
+*_backup*
+*_original*
+dashboard_v*.html
+ANALYSIS_v*.md
