@@ -17,9 +17,9 @@
 
 ## Screenshots / Demo
 
-> Dashboard preview coming soon.
-> 
-> To see it live: follow the Quickstart below — the dashboard loads in seconds.
+![CostPilot Dashboard](assets/dashboard-screenshot.png)
+
+> Live dashboard — Bloomberg Terminal-style dark UI with real-time cost tracking.
 
 ---
 
