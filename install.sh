@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# KIRA Cost Cockpit — Install Script
+# CostPilot — Install Script
 # Creates configs, sets permissions, and verifies requirements
 
 set -euo pipefail
@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${CYAN}⚡ KIRA Cost Cockpit — Install${NC}"
+echo -e "${CYAN}⚡ CostPilot — Install${NC}"
 echo "──────────────────────────────────"
 
 # Check Python version
@@ -26,6 +26,15 @@ if [[ "$PY_MAJOR" -lt 3 || ("$PY_MAJOR" -eq 3 && "$PY_MINOR" -lt 9) ]]; then
   exit 1
 fi
 echo -e "${GREEN}✓ Python $PY${NC}"
+
+# Install Python dependencies
+if [[ -f "$DIR/requirements.txt" ]]; then
+  echo -e "${YELLOW}→ Installing Python dependencies...${NC}"
+  pip install -r "$DIR/requirements.txt" --quiet && echo -e "${GREEN}✓ Dependencies installed${NC}" || {
+    echo -e "${RED}✗ pip install failed. Run manually: pip install -r requirements.txt${NC}"
+    exit 1
+  }
+fi
 
 # Create config.json if missing
 if [[ ! -f "$DIR/config.json" ]]; then
