@@ -30,3 +30,11 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Private data - never commit
+Export Anthropic /
+Export Anthropic*/
+anthropic_ground_truth.json
+*.csv
+cost-events.jsonl
+cost-events.jsonl.*
